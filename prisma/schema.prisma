@@ -1,0 +1,194 @@
+// FlowLink — Prisma schema.
+// SQLite for dev (DATABASE_URL="file:./dev.db"), PostgreSQL for prod.
+// Single schema file — all models, loose coupling via optional relations so each /v1/* route
+// works even if tangential tables are empty.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ── Identity ─────────────────────────────────────────────────────────
+
+// A principal that can hold API keys or complete a SIWE auth flow.
+// Humans sign up via the dashboard; agents arrive via SIWE with no prior record
+// and we lazily create a User row keyed on walletAddress.
+model User {
+  id            String   @id @default(cuid())
+  walletAddress String?  @unique
+  email         String?  @unique
+  displayName   String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  apiKeys        ApiKey[]
+  issuedInvoices Invoice[]        @relation("IssuedInvoices")
+  agentTokens    AgentToken[]
+
+  @@index([walletAddress])
+}
+
+// Scoped bearer tokens. Format: flk_live_<32-byte-base58> or flk_test_*.
+// Stored hashed; prefix is kept for admin lookup.
+model ApiKey {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  prefix        String    // e.g. "flk_test_abc123" — first 16 chars of the raw key
+  keyHash       String    @unique // sha256 of raw key
+  name          String
+  scopes        String    // comma-separated: "invoice:write,pay:execute,..."
+  createdAt     DateTime  @default(now())
+  lastUsedAt    DateTime?
+  revokedAt     DateTime?
+  expiresAt     DateTime?
+
+  @@index([userId])
+  @@index([prefix])
+}
+
+// JWT records issued from SIWE. Stored primarily for revocation.
+model AgentToken {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jti           String    @unique
+  scopes        String
+  issuedAt      DateTime  @default(now())
+  expiresAt     DateTime
+  revokedAt     DateTime?
+
+  @@index([userId])
+  @@index([jti])
+}
+
+// SIWE nonces, single-use, 5-minute TTL.
+model SiweNonce {
+  id        String   @id @default(cuid())
+  address   String
+  nonce     String   @unique
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  consumed  Boolean  @default(false)
+
+  @@index([address])
+  @@index([expiresAt])
+}
+
+// ── Invariants ───────────────────────────────────────────────────────
+
+// Idempotency key store. (keyHash unique) — one successful replay per key.
+model IdempotencyKey {
+  id          String   @id @default(cuid())
+  keyHash     String   @unique // sha256(principal || rawKey)
+  requestHash String   // sha256(method || path || canonical-body)
+  response    String   // JSON string (response body)
+  statusCode  Int
+  createdAt   DateTime @default(now())
+  expiresAt   DateTime
+
+  @@index([expiresAt])
+}
+
+// ── Core objects ─────────────────────────────────────────────────────
+
+model Invoice {
+  id               String    @id @default(cuid())
+  flowlinkId       String    @unique // "flowlink:inv/..."
+  issuerId         String
+  issuer           User      @relation("IssuedInvoices", fields: [issuerId], references: [id])
+  receiverAddress  String    // EIP-55 address
+  amount           String    // decimal string
+  token            String    // USDC | USDT | HSK
+  chainId          Int       @default(133)
+  purpose          String?
+  status           String    @default("pending") // pending|paying|paid|expired|cancelled
+  dueAt            DateTime
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  paidAt           DateTime?
+  cancelledAt      DateTime?
+  lockToken        String?   // set when a payer takes the `paying` lock
+  lockedAt         DateTime?
+
+  transactions Transaction[]
+
+  @@index([issuerId])
+  @@index([status])
+  @@index([receiverAddress])
+}
+
+// Umbrella over every payment attempt against an invoice (or standalone).
+model Transaction {
+  id              String    @id @default(cuid())
+  flowlinkId      String    @unique // "flowlink:txn/..."
+  invoiceId       String?
+  invoice         Invoice?  @relation(fields: [invoiceId], references: [id])
+  payerAddress    String
+  receiverAddress String
+  amount          String
+  token           String
+  chainId         Int       @default(133)
+  status          String    @default("initiated") // initiated|compliance_passed|mandate_created|settled|failed
+  idempotencyKey  String?   // echo of client's key for observability
+  hspMandateId    String?
+  checkoutUrl     String?
+  txHash          String?
+  block           Int?
+  complianceScore Int?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  settledAt       DateTime?
+  failedAt        DateTime?
+  failureCode     String?
+
+  receipt Receipt?
+  events  TransactionEvent[]
+
+  @@index([invoiceId])
+  @@index([status])
+  @@index([payerAddress])
+}
+
+model TransactionEvent {
+  id            String      @id @default(cuid())
+  transactionId String
+  transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  type          String      // compliance_passed | mandate_created | settled | receipt_ready | failed
+  data          String      // JSON payload
+  createdAt     DateTime    @default(now())
+
+  @@index([transactionId, createdAt])
+}
+
+model Receipt {
+  id            String      @id @default(cuid())
+  flowlinkId    String      @unique // "flowlink:rcp/..."
+  transactionId String      @unique
+  transaction   Transaction @relation(fields: [transactionId], references: [id])
+  payloadJson   String      // canonical JSON signed over
+  signature     String      // base64
+  keyId         String
+  algo          String      @default("ed25519")
+  createdAt     DateTime    @default(now())
+
+  @@index([keyId])
+}
+
+// ── Compliance ledger (velocity check needs this) ────────────────────
+
+model ComplianceLog {
+  id         String   @id @default(cuid())
+  address    String
+  sanctionsOk Boolean
+  score      Int
+  source     String   // "ofac-api" | "fallback-list" | "cache"
+  detail     String?  // JSON
+  createdAt  DateTime @default(now())
+
+  @@index([address, createdAt])
+}

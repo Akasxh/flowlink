@@ -1,0 +1,40 @@
+# FlowLink
+
+> Compliance-first payment layer for the agent economy on HashKey Chain (id 133).
+> No SDK. Wallet signature (SIWE) or scoped API key for write access. Receipts are ed25519-signed.
+
+## Start here
+
+- Agent quickstart: https://flowlink.ink/.well-known/flowlink.md
+- OpenAPI 3.1:      https://flowlink.ink/.well-known/openapi.yaml
+- MCP manifest:     https://flowlink.ink/.well-known/mcp.json
+
+## Skills
+
+- [invoice](https://flowlink.ink/skills/invoice.md) — create, read, cancel invoices
+- [pay](https://flowlink.ink/skills/pay.md) — settle an invoice via HSP Single-Pay mandate
+- [compliance](https://flowlink.ink/skills/compliance.md) — OFAC + velocity screening
+- [receipt](https://flowlink.ink/skills/receipt.md) — cryptographic proof of settlement
+- [reputation](https://flowlink.ink/skills/reputation.md) — counterparty trust score
+
+## Auth
+
+- SIWE (recommended): POST /v1/auth/siwe/nonce -> sign EIP-4361 -> POST /v1/auth/siwe/verify
+- API key (dev): generate at https://flowlink.ink/dashboard/keys
+- Send as `Authorization: Bearer <token>` on all /v1/* calls
+
+## Conventions
+
+- Base URL: https://flowlink.ink
+- Errors: RFC 9457 Problem+JSON, every error has `code` and `agent_action`
+- Idempotency: required on POST/PUT/DELETE, `Idempotency-Key` header, 24h replay window
+- Rate limits: surfaced in `X-RateLimit-*` headers, `Retry-After` on 429
+- Request IDs: echoed in `X-Request-Id`, minted as ULID if client omits
+
+## Error catalogue
+
+https://flowlink.ink/skills/errors.md
+
+## Settlement chain
+
+HashKey Chain testnet, chain id 133. RPC: https://hashkeychain-testnet.alt.technology

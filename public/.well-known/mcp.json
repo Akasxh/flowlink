@@ -1,0 +1,61 @@
+{
+  "$schema": "https://modelcontextprotocol.io/schemas/mcp.schema.json",
+  "name": "flowlink",
+  "version": "1.0.0",
+  "description": "Compliance-first payments for the agent economy on HashKey Chain (id 133). Markdown is the API.",
+  "vendor": {
+    "name": "FlowLink",
+    "url": "https://flowlink.ink"
+  },
+  "servers": [
+    {
+      "name": "flowlink-remote",
+      "transport": "sse",
+      "url": "https://flowlink.ink/mcp",
+      "auth": {
+        "type": "bearer",
+        "token_url": "https://flowlink.ink/v1/auth/siwe/verify",
+        "scopes": [
+          "invoice:read",
+          "invoice:write",
+          "pay:execute",
+          "receipt:read",
+          "compliance:check",
+          "reputation:read"
+        ]
+      }
+    }
+  ],
+  "tools": [
+    {
+      "name": "create_invoice",
+      "description": "Create an invoice with a stable invoice_id. See /skills/invoice.md.",
+      "description_url": "https://flowlink.ink/skills/invoice.md"
+    },
+    {
+      "name": "get_invoice",
+      "description": "Fetch an invoice by id. See /skills/invoice.md.",
+      "description_url": "https://flowlink.ink/skills/invoice.md"
+    },
+    {
+      "name": "pay_invoice",
+      "description": "Settle an invoice via HSP Single-Pay mandate with inline OFAC screening. See /skills/pay.md.",
+      "description_url": "https://flowlink.ink/skills/pay.md"
+    },
+    {
+      "name": "check_sanctions",
+      "description": "OFAC + velocity screen a wallet address. Fails closed on upstream error. See /skills/compliance.md.",
+      "description_url": "https://flowlink.ink/skills/compliance.md"
+    },
+    {
+      "name": "get_receipt",
+      "description": "Fetch an ed25519-signed receipt for a settled transaction. See /skills/receipt.md.",
+      "description_url": "https://flowlink.ink/skills/receipt.md"
+    },
+    {
+      "name": "get_reputation",
+      "description": "Query the counterparty reputation score for a wallet address. See /skills/reputation.md.",
+      "description_url": "https://flowlink.ink/skills/reputation.md"
+    }
+  ]
+}
