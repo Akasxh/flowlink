@@ -23,10 +23,25 @@ export async function POST(req: NextRequest) {
         requestId,
       });
     }
-    const result = await issueNonce({
-      address: parsed.data.address,
-      chainId: parsed.data.chainId,
-    });
+    let result;
+    try {
+      result = await issueNonce({
+        address: parsed.data.address,
+        chainId: parsed.data.chainId,
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      // Catch the checksum failure cleanly instead of leaking raw SIWE parser internals.
+      if (msg.startsWith("invalid_address")) {
+        return problemJson({
+          code: "validation_error",
+          detail: msg.replace(/^invalid_address:\s*/, ""),
+          instance: "/v1/auth/siwe/nonce",
+          requestId,
+        });
+      }
+      throw err;
+    }
     return new Response(
       JSON.stringify({
         nonce: result.nonce,

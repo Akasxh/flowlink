@@ -40,10 +40,11 @@ Every `/v1/*` error response is `application/problem+json` (RFC 9457) with these
 | `chain_id_mismatch` | 400 | Switch wallet to HashKey chain id 133. |
 | `missing_idempotency_key` | 400 | Provide `Idempotency-Key: <ULID>` header. |
 
-### Not found (404)
+### Not found / not ready (202 / 404)
 
 | code | status | agent action |
 |---|---|---|
+| `receipt_not_ready` | 202 | Transaction still settling. Retry in 5 seconds. |
 | `invoice_not_found` | 404 | Verify `invoice_id` came from a successful create. |
 | `receipt_not_found` | 404 | Wait for `receipt_ready` SSE event first. |
 | `transaction_not_found` | 404 | Verify `transaction_id`. |

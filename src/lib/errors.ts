@@ -20,6 +20,7 @@ export type ProblemCode =
   // Not found (404)
   | "invoice_not_found"
   | "receipt_not_found"
+  | "receipt_not_ready"
   | "transaction_not_found"
   | "not_found"
   // Conflict (409/410)
@@ -96,6 +97,11 @@ const CATALOGUE: Record<ProblemCode, CatalogueEntry> = {
     status: 404,
     title: "Receipt not found",
     agentAction: "Wait for receipt_ready SSE event before requesting the receipt.",
+  },
+  receipt_not_ready: {
+    status: 202,
+    title: "Receipt not ready yet",
+    agentAction: "Transaction still settling. Retry the fetch in 5 seconds.",
   },
   transaction_not_found: {
     status: 404,

@@ -11,12 +11,17 @@
 // on the nonce/verify verbs.
 
 import { SiweMessage, generateNonce } from "siwe";
+import { getAddress } from "viem";
 import { prisma } from "../prisma";
 
 const NONCE_TTL_SEC = 5 * 60;
 const DEFAULT_DOMAIN = "flowlink.ink";
+// EIP-4361 ABNF grammar restricts statement to printable ASCII. The em-dash
+// (U+2014) we originally used caused siwe's post-generation validator to reject
+// every message with state:103 / maxMatched:167. Round-3 agent round3-siwe caught
+// this via HTTP 500 on every nonce call.
 const DEFAULT_STATEMENT =
-  "Sign in to FlowLink. This request is for authentication only — it will not trigger any on-chain transaction.";
+  "Sign in to FlowLink. This request is for authentication only - it will not trigger any on-chain transaction.";
 
 export type NonceIssue = {
   nonce: string;
@@ -34,6 +39,19 @@ export async function issueNonce(args: {
   uri?: string;
   chainId?: number;
 }): Promise<NonceIssue> {
+  // SIWE requires the address in EIP-55 checksum form. Round-3 agent round3-siwe
+  // caught a P0 bug where we were passing lowercased/unchecksummed addresses into
+  // SiweMessage, causing the library's own validator to reject the generated
+  // message — surfacing as HTTP 500 on every /v1/auth/siwe/nonce call.
+  let checksummedAddress: `0x${string}`;
+  try {
+    checksummedAddress = getAddress(args.address);
+  } catch (err) {
+    throw new Error(
+      `invalid_address: ${args.address} is not a valid EVM address (${err instanceof Error ? err.message : String(err)})`,
+    );
+  }
+
   const nonce = generateNonce();
   const issuedAtDate = new Date();
   const expiresAtDate = new Date(issuedAtDate.getTime() + NONCE_TTL_SEC * 1000);
@@ -43,7 +61,7 @@ export async function issueNonce(args: {
 
   const message = new SiweMessage({
     domain,
-    address: args.address,
+    address: checksummedAddress,
     statement: DEFAULT_STATEMENT,
     uri,
     version: "1",
@@ -55,7 +73,7 @@ export async function issueNonce(args: {
 
   await prisma.siweNonce.create({
     data: {
-      address: args.address,
+      address: checksummedAddress.toLowerCase(), // store lowercase for case-insensitive lookup on verify
       nonce,
       expiresAt: expiresAtDate,
     },

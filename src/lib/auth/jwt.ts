@@ -43,9 +43,11 @@ function getSigningKey(): Uint8Array {
 }
 
 export function currentKeyId(): string {
+  // Round-3 agent round3-rr flagged a kid collision risk with receipt signing keys.
+  // Namespace the JWT key so receipt-signing keys and JWT-signing keys are clearly distinct.
   const now = new Date();
   const yyyymm = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}`;
-  return `flk-${yyyymm}`;
+  return `flk-jwt-${yyyymm}`;
 }
 
 export async function signAccessToken(args: {

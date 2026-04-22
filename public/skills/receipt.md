@@ -86,9 +86,10 @@ first and rotated keys after.
 
 | code | status | agent should |
 |---|---|---|
-| `receipt_not_found` | 404 | Check the id. Receipts appear after the `receipt_ready` SSE event. |
-| `receipt_not_ready` | 202 | Transaction still settling. Retry in 5 s. |
+| `auth_required` | 401 | Authenticate first — receipts are never public. Provide `Authorization: Bearer <token>`. |
 | `insufficient_scope` | 403 | Need `receipt:read`. |
+| `receipt_not_ready` | 202 | Transaction still settling. Retry in 5 s. |
+| `receipt_not_found` | 404 | Only visible after auth. Wait for `receipt_ready` SSE event, then retry. |
 
 ## Related
 

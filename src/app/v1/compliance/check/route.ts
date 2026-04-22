@@ -39,15 +39,47 @@ export async function POST(req: NextRequest) {
 
     const result = await check(parsed.data.address);
 
-    if (!result.sanctionsOk && result.reason === "upstream_unavailable") {
+    // Fix (found by round-1 agent enabled-3): 4xx must use Problem+JSON envelope.
+    // A 200 answer to a lookup query uses a custom body (the lookup result). But any
+    // non-2xx is a contract violation unless it's RFC 9457 Problem+JSON.
+    if (result.reason === "upstream_unavailable") {
       return problemJson({
         code: "compliance_upstream_unavailable",
         detail: result.detail ?? "OFAC upstream failed",
         instance: "/v1/compliance/check",
         requestId,
+        extras: { address: parsed.data.address },
+      });
+    }
+    if (!result.sanctionsOk && result.reason === "sanctions_match") {
+      return problemJson({
+        code: "compliance_blocked_sanctions",
+        detail: result.detail ?? "address matches OFAC SDN list",
+        instance: "/v1/compliance/check",
+        requestId,
+        extras: {
+          address: parsed.data.address,
+          score: result.score,
+          sanctions_source: result.sanctionsSource,
+        },
+      });
+    }
+    if (result.reason === "velocity_exceeded") {
+      return problemJson({
+        code: "compliance_blocked_velocity",
+        detail: result.detail ?? "velocity ceiling exceeded",
+        instance: "/v1/compliance/check",
+        requestId,
+        retryAfter: 3600,
+        extras: {
+          address: parsed.data.address,
+          score: result.score,
+          velocity: result.velocity,
+        },
       });
     }
 
+    // 200 OK — successful lookup, custom body is appropriate.
     return new Response(
       JSON.stringify({
         address: parsed.data.address,
@@ -67,7 +99,7 @@ export async function POST(req: NextRequest) {
         },
       }),
       {
-        status: result.ok ? 200 : 403,
+        status: 200,
         headers: {
           "Content-Type": "application/json",
           "X-Request-Id": requestId,

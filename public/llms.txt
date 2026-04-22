@@ -6,8 +6,8 @@
 ## Start here
 
 - Agent quickstart: https://flowlink.ink/.well-known/flowlink.md
-- OpenAPI 3.1:      https://flowlink.ink/.well-known/openapi.yaml
 - MCP manifest:     https://flowlink.ink/.well-known/mcp.json
+- OpenAPI 3.1:      (ships in v0.2 — for now use the skill files below)
 
 ## Skills
 
@@ -20,7 +20,7 @@
 ## Auth
 
 - SIWE (recommended): POST /v1/auth/siwe/nonce -> sign EIP-4361 -> POST /v1/auth/siwe/verify
-- API key (dev): generate at https://flowlink.ink/dashboard/keys
+- API key (dashboard generator ships in v0.2; lib/auth/apikey.ts is already wired)
 - Send as `Authorization: Bearer <token>` on all /v1/* calls
 
 ## Conventions

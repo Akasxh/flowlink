@@ -66,10 +66,11 @@ const cache = new Map<string, CacheEntry>();
 export async function check(address: string): Promise<ComplianceResult> {
   const norm = address.toLowerCase();
 
-  // Fast path: in-memory cache
+  // Fast path: in-memory cache. Preserve the original sanctionsSource so byte-level
+  // determinism holds across cached vs fresh responses (found by round-2 idem-probe agent).
   const cached = cache.get(norm);
   if (cached && Date.now() - cached.at < CACHE_TTL_MS) {
-    return { ...cached.result, sanctionsSource: "cache" as const };
+    return cached.result;
   }
 
   // Step 1: fallback list (network-free)
