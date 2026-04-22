@@ -131,6 +131,13 @@ These lived in an earlier prototype. Cut for simplicity. Revisit when a real use
 
 ---
 
+## Pitch + real-agent evidence
+
+[`pitch/`](./pitch/) contains the slides, screenshots, pitch deck, and **22 real Claude agent
+transcripts** from 5 iterations of testing. Open `pitch/comparison.html` locally to see the
+side-by-side replay of agent-with-FlowLink vs agent-with-Playwright-only. Every number in those
+slides comes from a real run.
+
 ## Hackathon note
 
 FlowLink was first built for the HashKey On-Chain Horizon Hackathon 2026 on the PayFi and AI tracks. The

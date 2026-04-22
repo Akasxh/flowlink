@@ -1,0 +1,20 @@
+{
+  "agent_id": "round2-idem",
+  "auth_order_correct": true,
+  "compliance_determinism_holds": false,
+  "tool_calls": 10,
+  "findings": [
+    "Test 1 (no auth, no idem key) returned 401 auth_required as expected",
+    "Test 2 (fake bearer flk_test_fake, no idem key) returned 401 auth_required as expected - auth wins even with malformed token",
+    "Test 3 (no auth, with Idempotency-Key: 01HTEST) returned 401 auth_required as expected - auth precedes idempotency validation",
+    "All 3 auth_required responses carried RFC7807 type URI https://flowlink.ink/errors/auth_required, code=auth_required, status=401, agent_action pointing to /.well-known/flowlink.md for SIWE flow",
+    "Compliance endpoint is unauthenticated (as claimed); Tornado Cash address 0x8589...DA16 correctly returned 403 compliance_blocked_sanctions on all 4 calls",
+    "Semantic determinism holds: blocked status, score=0, and detail text identical across all compliance calls",
+    "Idempotency-Key appears NOT to replay stored response on compliance endpoint; each call returns a fresh request_id and recomputes",
+    "No 409 idempotency_conflict was triggered when reusing key 01HCOMP01 with a different address body - instead upstream returned 503 compliance_upstream_unavailable, suggesting the Idempotency-Key middleware is not enforced on the compliance path"
+  ],
+  "bugs_discovered": [
+    "DETERMINISM LEAK: first compliance call returns sanctions_source='fallback'; subsequent calls return sanctions_source='cache'. The response body is NOT byte-identical across replays. This is an internal implementation detail leaking into the public response. Either mask sanctions_source from API output, or normalize so replay via Idempotency-Key replays the original 'fallback' token instead of reflecting post-cache-warm state.",
+    "IDEMPOTENCY NOT ENFORCED ON COMPLIANCE: same Idempotency-Key with a different request body did NOT return 409 idempotency_conflict as the spec claims. The compliance endpoint appears to bypass the Idempotency-Key middleware entirely. If the 24h dedup guarantee is meant to apply to all writes, /v1/compliance/check should either (a) honor it and emit 409 on body mismatch, or (b) be documented as exempt."
+  ]
+}

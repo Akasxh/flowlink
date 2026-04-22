@@ -1,0 +1,86 @@
+{
+  "scenario": "enabled",
+  "agent_id": "enabled-3",
+  "task": "error-handling surface",
+  "tool_calls": 7,
+  "bytes_fetched_total": 5293,
+  "final_state": "success",
+  "errors_tested": 4,
+  "errors_with_actionable_hint": 4,
+  "what_worked": [
+    "GET /skills/errors.md returned a complete Problem+JSON (RFC 9457) catalogue with explicit 'agent_action' column per error code",
+    "Every error response included all 9 documented fields: type, title, status, code, detail, instance, request_id, agent_action (and retry_after when applicable)",
+    "Test 1 (401 auth_required): response gave exact next step -> 'Provide Authorization: Bearer <token>. See /.well-known/flowlink.md for SIWE flow.'",
+    "Test 2 (400 validation_error on malformed JSON): server did not crash, parsed partially and returned 'Expected object, received null' in detail with agent_action 'Fix the field described in detail.'",
+    "Test 4 (403 compliance): Tornado Cash address was actually screened against OFAC fallback list, returned structured 'sanctions_ok:false' with sources and reason 'sanctions_match'. Clear signal to stop (the errors.md catalogue says 'Stop. Do NOT retry. Escalate to human.' for compliance_blocked_sanctions)",
+    "request_id is a ULID echoed in every error -> gives fresh agent a support correlation handle",
+    "Error catalogue cross-links: 'type' field is a stable URL back to catalogue; agent can re-fetch contract on-demand"
+  ],
+  "what_failed": [
+    "Test 3 (missing Idempotency-Key) could not be isolated: the auth gate fired first (401) before the body/header was validated, so 'missing_idempotency_key' (400) was masked. A fresh agent without a valid token never sees the idempotency error. Retry with 'Bearer flk_test_demo' still returned 401 - no obvious dev-token path exposed without the dashboard.",
+    "Test 2's detail field had a leading colon ': Expected object, received null' - suggests the JSON-path prefix is empty but not stripped; cosmetic issue, not blocking",
+    "Test 4's compliance endpoint returned 403 with a SUCCESSFUL-looking body shape (no 'code'/'title'/'agent_action' fields) rather than a Problem+JSON error envelope. This breaks the 'every /v1/* error is application/problem+json' contract advertised in errors.md. A fresh agent matching on 'code' would fail to parse. The body DOES contain 'sanctions_ok:false' and 'reason:sanctions_match' so intent is inferrable, but not via the documented 'match on code' rule."
+  ],
+  "context_observations": "A fresh agent CAN recover from 3 of 4 failures purely from response bodies: each actionable hint is machine-parseable and points either to a documented remediation or a link back to the catalogue. The errors.md file is self-sufficient - it maps every code to an explicit action (fix input, retry with backoff, escalate to human, re-SIWE, etc.) and includes a retry-strategy cheat-sheet. BUT two ambiguities exist: (1) ordering - auth (401) supersedes validation (400), so a naive agent testing malformed bodies sees only the auth error; this is defensible security posture but worth noting in the catalogue. (2) The 403 sanctions response on /v1/compliance/check uses a custom schema, not Problem+JSON; agents relying on the documented envelope will miss the signal. Recovery is still possible by reading 'sanctions_ok' or 'details.reason', but the contract promise of 'match on code' is violated at the compliance endpoint. Overall the error surface is unusually agent-friendly: request_id correlation, type-URL back-links, explicit agent_action per code, and a published retry-strategy table together eliminate human intervention for typical 4xx/5xx flows.",
+  "log": [
+    {
+      "call": 1,
+      "action": "GET /skills/errors.md",
+      "http": 200,
+      "bytes": 3674,
+      "finding": "Full catalogue with agent_action column for every code; retry cheat-sheet at bottom"
+    },
+    {
+      "call": 2,
+      "action": "POST /v1/invoices (no auth)",
+      "http": 401,
+      "bytes": 329,
+      "code": "auth_required",
+      "agent_action_present": true,
+      "hint": "Provide Authorization: Bearer <token>. See /.well-known/flowlink.md for SIWE flow."
+    },
+    {
+      "call": 3,
+      "action": "POST /v1/compliance/check (malformed JSON body)",
+      "http": 400,
+      "bytes": 297,
+      "code": "validation_error",
+      "agent_action_present": true,
+      "hint": "Fix the field described in detail."
+    },
+    {
+      "call": 4,
+      "action": "POST /v1/invoices (Bearer demo, no Idempotency-Key)",
+      "http": 401,
+      "bytes": 329,
+      "code": "auth_required",
+      "note": "auth gate fires before idempotency check; masked test 3",
+      "agent_action_present": true
+    },
+    {
+      "call": 5,
+      "action": "POST /v1/compliance/check (Tornado Cash 0x8589...DA16)",
+      "http": 403,
+      "bytes": 335,
+      "code": null,
+      "agent_action_present": false,
+      "note": "non-standard envelope (no code/title/agent_action); sanctions_ok:false + reason:sanctions_match still parseable",
+      "catalogue_hint_for_this_case": "compliance_blocked_sanctions -> Stop. Do NOT retry. Escalate to human."
+    },
+    {
+      "call": 6,
+      "action": "GET /.well-known/flowlink.md",
+      "http": 200,
+      "bytes": 1619,
+      "finding": "auth quickstart: SIWE flow or flk_test_* dashboard key; no unauth dev token published"
+    },
+    {
+      "call": 7,
+      "action": "POST /v1/invoices (Bearer flk_test_demo, retry test 3)",
+      "http": 401,
+      "bytes": 329,
+      "code": "auth_required",
+      "note": "placeholder token rejected; cannot reach missing_idempotency_key path in 12-call budget"
+    }
+  ]
+}

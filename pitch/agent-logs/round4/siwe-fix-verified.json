@@ -1,0 +1,63 @@
+{
+  "agent_id": "round4-siwe-verify",
+  "p0_fix_verified": true,
+  "tool_calls": 8,
+  "assertions_passed": 18,
+  "assertions_failed": 0,
+  "parallel_nonces_unique": true,
+  "eip4361_format_valid": true,
+  "lowercase_address_accepted": true,
+  "regressions": [],
+  "evidence": {
+    "test_1_valid_checksum": {
+      "status": 200,
+      "has_nonce": true,
+      "expires_in": 300,
+      "chain_id": 133
+    },
+    "test_2_eip4361_fields_checked": [
+      "starts_with_flowlink.ink_wants_you_to_sign_in",
+      "includes_address",
+      "Version: 1",
+      "Chain ID: 133",
+      "Nonce",
+      "Issued At"
+    ],
+    "test_3_ascii_hyphen_confirmed": {
+      "hex_at_offset_0x38": "2d",
+      "em_dash_u2014_present": false,
+      "substring_match": "authentication only - it will not trigger"
+    },
+    "test_4_parallel": {
+      "requests": 5,
+      "all_200": true,
+      "nonces": [
+        "f8bC90Fk8pVWNCOjO",
+        "K3e0vUCc1ofkw2Z6g",
+        "ZdjaYocWRHZKeKSOL",
+        "jNc9NjoaLPPFUjLvh",
+        "I6gE9495MbVlC9XdM"
+      ],
+      "unique_count": 5
+    },
+    "test_5_invalid_hex": {
+      "status": 400,
+      "code": "validation_error",
+      "detail": "address: address must be 0x + 40 hex chars"
+    },
+    "test_6_lowercase": {
+      "status": 200,
+      "normalized_address": "0x742d35Cc6634C0532925A3b844bc9E7595F8BEA0"
+    },
+    "test_7_empty_body": {
+      "status": 400,
+      "code": "validation_error",
+      "detail": "address: Required"
+    },
+    "test_8_verify_bogus": {
+      "status": 401,
+      "content_type": "application/problem+json",
+      "code": "invalid_credentials"
+    }
+  }
+}

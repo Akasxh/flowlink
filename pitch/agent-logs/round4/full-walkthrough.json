@@ -1,0 +1,12 @@
+{
+  "agent_id": "round4-walkthrough",
+  "tool_calls": 6,
+  "llms_txt_links_total": 9,
+  "llms_txt_links_resolved_200": 8,
+  "llms_txt_links_broken": 1,
+  "probes_successful": 5,
+  "probes_returned_problem_json": 5,
+  "unexpected_5xx": 0,
+  "would_a_sonnet_understand_this": true,
+  "notes": "Cold-start from /llms.txt yielded 9 linkable URLs: flowlink.md, mcp.json, 5 skill files (invoice, pay, compliance, receipt, reputation), errors.md, and /dashboard/keys. 8/9 returned 200. BROKEN LINK: /dashboard/keys returned 404 (it is advertised in the 'Auth' section as the dev API key generation page but not implemented). Probed one representative endpoint per skill: invoice (GET /v1/invoices/inv_probe_nonexistent -> 401 auth_required), pay (POST /v1/pay no-auth -> 401 auth_required), compliance (POST /v1/compliance/check anon -> 503 compliance_upstream_unavailable, which IS the documented fail-closed behavior when OFAC upstream is unreachable, so not an unexpected 5xx), receipt (GET /v1/receipts/rcp_nonexistent -> 401 auth_required), reputation (GET /v1/reputation/0x0...1 anon -> 404 not_found). Every probe returned Content-Type application/problem+json with the full RFC 9457 shape including type, title, status, code, detail, request_id (ULID), and agent_action - matches errors.md catalogue exactly. The compliance 503 is documented in errors.md as expected fail-closed when OFAC source is unreachable - agent_action says backoff and retry - so counts as correct error shape not unexpected server error. Zero unexpected 5xx. The agent-native surface is internally consistent and a Sonnet-class model could navigate it end-to-end from /llms.txt alone - every error includes agent_action prose telling the agent exactly what to do next. One fix needed: either ship /dashboard/keys or remove the dashboard reference from llms.txt."
+}

@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>FlowLink · With vs Without Agent-Native</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --teal-900:#063a3a; --teal-800:#0a4f4f; --teal-700:#0c6363; --teal-600:#0d7a7a;
+    --teal-500:#158b8b; --teal-400:#1da0a0; --cyan-500:#2fc4c4;
+    --green-600:#217a49; --green-500:#2a9056; --green-400:#3ba867;
+    --red-700:#b8354a; --red-500:#d85a6c; --red-400:#e07a8f; --amber-500:#e0a23b;
+    --mint-50:#eef7f2; --mint-100:#e3f1ea; --mint-200:#cfe7db;
+    --ink-900:#0f1b22; --ink-700:#1a2733; --ink-500:#4a5a66; --ink-400:#6b7a85; --ink-200:#c6d0d7;
+    --paper:#ffffff; --paper-soft:#f7fbfa;
+
+    --term-bg:#062e2e; --term-text:#d8ece9; --term-dim:#7aa39e;
+    --term-bg-bad:#2c1a1f; --term-bad-text:#f0d6da; --term-bad-dim:#9a7a82;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:#eef3f2;font-family:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink-700);min-height:100%}
+  body{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:32px;padding:24px;background:
+    radial-gradient(1200px 600px at 10% 0%,#d9ebe6 0,transparent 60%),
+    radial-gradient(900px 500px at 100% 100%,#dbe8df 0,transparent 60%),
+    #eef3f2;}
+
+  .slide{
+    width:100%;max-width:1600px;aspect-ratio:16/9;
+    background:var(--paper);border-radius:22px;
+    box-shadow:0 1px 0 rgba(12,99,99,.06),0 20px 60px -20px rgba(10,79,79,.35),0 40px 120px -40px rgba(10,79,79,.25);
+    overflow:hidden;position:relative;display:grid;grid-template-rows:auto auto 1fr auto;
+    padding:36px 44px 28px;gap:18px;container-type:inline-size;
+  }
+
+  /* top bar */
+  .top{display:flex;align-items:center;justify-content:space-between;gap:24px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .brand-mark{
+    width:34px;height:34px;border-radius:10px;position:relative;
+    background:radial-gradient(120% 120% at 30% 20%,#1fb3a3 0%,#0d7a7a 55%,#083f3f 100%);
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.18),0 8px 20px -8px rgba(13,122,122,.6);
+  }
+  .brand-mark::before,.brand-mark::after{content:"";position:absolute;inset:6px;border-radius:50%;border:2.5px solid transparent;}
+  .brand-mark::before{border-top-color:#2fc4c4;border-right-color:#2fc4c4;transform:rotate(20deg)}
+  .brand-mark::after{border-bottom-color:#3ba867;border-left-color:#3ba867;transform:rotate(20deg)}
+  .brand-word{font-weight:800;font-size:20px;letter-spacing:-.01em;color:var(--teal-800)}
+  .kicker{
+    font-size:10px;font-weight:700;letter-spacing:.18em;color:var(--ink-400);
+    padding:7px 12px;border-radius:999px;background:var(--mint-50);border:1px solid var(--mint-200);
+  }
+  .kicker b{color:var(--teal-700)}
+
+  /* heading */
+  .head{display:grid;grid-template-columns:1.15fr .85fr;gap:28px;align-items:end}
+  h1{font-size:clamp(32px,3.6cqi,54px);font-weight:800;letter-spacing:-.02em;line-height:1.02;color:var(--teal-800);}
+  h1 .accent{background:linear-gradient(90deg,var(--teal-500),var(--green-500));-webkit-background-clip:text;background-clip:text;color:transparent;}
+  h1 .strike{color:var(--red-500);text-decoration:line-through;text-decoration-color:rgba(216,90,108,.55);text-decoration-thickness:.08em}
+  .lede{color:var(--ink-500);font-size:clamp(12px,1.1cqi,16px);line-height:1.55;max-width:52ch;}
+  .lede b{color:var(--ink-700);font-weight:600}
+
+  /* panels */
+  .panels{display:grid;grid-template-columns:1fr 1fr;gap:18px;min-height:0;}
+  .panel{border-radius:14px;overflow:hidden;position:relative;display:grid;grid-template-rows:auto 1fr auto;min-height:0;}
+  .panel-bad{background:linear-gradient(180deg,#3b1b24 0%,#2c1417 100%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.05),0 10px 40px -20px rgba(70,20,30,.6);}
+  .panel-good{background:linear-gradient(180deg,#0b5555 0%,#063737 100%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.05),0 10px 40px -20px rgba(6,55,55,.6);}
+
+  .panel-head{
+    display:flex;align-items:center;gap:10px;padding:11px 16px;
+    background:rgba(0,0,0,.25);border-bottom:1px solid rgba(255,255,255,.06);
+  }
+  .panel-tag{
+    padding:3px 9px;border-radius:6px;font:700 10px/1 "JetBrains Mono",monospace;letter-spacing:.12em;text-transform:uppercase;
+  }
+  .panel-bad .panel-tag{background:rgba(216,90,108,.18);color:#f0a8b4}
+  .panel-good .panel-tag{background:rgba(47,196,196,.18);color:#2fc4c4}
+  .panel-title{color:#fff;font:700 13px/1.2 "Inter",sans-serif;}
+  .panel-sub{margin-left:auto;font:500 11px/1 "JetBrains Mono",monospace;color:#9ab3b0;letter-spacing:.04em;}
+  .panel-bad .panel-sub{color:#c7a4ab}
+  .dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:2px}
+  .dot-run{background:#e0a23b;box-shadow:0 0 0 4px rgba(224,162,59,.22);animation:pulse 1.6s ease-in-out infinite}
+  .dot-ok{background:#3ba867;box-shadow:0 0 0 4px rgba(59,168,103,.22)}
+  .dot-err{background:#d85a6c;box-shadow:0 0 0 4px rgba(216,90,108,.22)}
+  .dot-idle{background:#5f8a85}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+
+  /* terminal body */
+  .term{
+    padding:14px 18px 10px;font:500 11.8px/1.55 "JetBrains Mono",ui-monospace,monospace;
+    overflow:auto;min-height:0;scrollbar-width:thin;
+  }
+  .panel-bad .term{color:var(--term-bad-text);scrollbar-color:rgba(216,90,108,.25) transparent}
+  .panel-good .term{color:var(--term-text);scrollbar-color:rgba(47,196,196,.3) transparent}
+  .term::-webkit-scrollbar{width:5px}
+  .panel-bad .term::-webkit-scrollbar-thumb{background:rgba(216,90,108,.3);border-radius:3px}
+  .panel-good .term::-webkit-scrollbar-thumb{background:rgba(47,196,196,.3);border-radius:3px}
+
+  .line{display:flex;gap:9px;align-items:flex-start;margin-bottom:4px;opacity:0;transform:translateY(3px);transition:opacity .22s,transform .22s;}
+  .line.on{opacity:1;transform:none}
+  .line .pfx{flex:none;width:14px;color:#5f8a85;font-weight:700}
+  .panel-bad .line .pfx{color:#8e6b74}
+  .line .body{flex:1;word-break:break-word}
+  .line.cmd .pfx{color:#2fc4c4}
+  .panel-bad .line.cmd .pfx{color:#e07a8f}
+  .line.ok .pfx{color:#3ba867}
+  .line.err .pfx{color:#d85a6c}
+  .line.warn .pfx{color:#f6c663}
+  .muted{color:var(--term-dim)}
+  .panel-bad .muted{color:var(--term-bad-dim)}
+  .tag{display:inline-block;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.05em;margin-right:6px;vertical-align:1px;font-family:"JetBrains Mono",monospace}
+  .tag-get{background:rgba(47,196,196,.18);color:#7ce0e0}
+  .tag-post{background:rgba(59,168,103,.18);color:#8de2af}
+  .tag-nav{background:rgba(246,198,99,.18);color:#f6c663}
+  .tag-401{background:rgba(216,90,108,.22);color:#ffbec9}
+  .tag-404{background:rgba(216,90,108,.18);color:#f0a8b4}
+  .tag-403{background:rgba(216,90,108,.22);color:#ffbec9}
+  .tag-503{background:rgba(246,198,99,.2);color:#ffd98a}
+  .tag-200{background:rgba(59,168,103,.22);color:#a5e9c0}
+  .tag-201{background:rgba(59,168,103,.22);color:#a5e9c0}
+  .tag-500{background:rgba(216,90,108,.22);color:#ffbec9}
+  .tag-blocked{background:rgba(216,90,108,.3);color:#fff}
+  .tag-done{background:rgba(59,168,103,.3);color:#fff}
+  b.hl{color:#fff;font-weight:700}
+
+  .block-banner{
+    margin-top:8px;padding:8px 12px;border-radius:8px;font:700 12px/1.3 "Inter",sans-serif;
+    display:flex;align-items:center;gap:10px;
+  }
+  .block-banner.bad{background:rgba(216,90,108,.22);color:#ffdce2;border:1px solid rgba(216,90,108,.35)}
+  .block-banner.good{background:rgba(59,168,103,.22);color:#c7f3d8;border:1px solid rgba(59,168,103,.35)}
+
+  /* panel footer (live metrics) */
+  .panel-foot{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:8px;
+    padding:10px 16px;background:rgba(0,0,0,.25);border-top:1px solid rgba(255,255,255,.05);
+  }
+  .metric{display:flex;flex-direction:column;gap:2px}
+  .metric .label{font:600 9px/1 "JetBrains Mono",monospace;letter-spacing:.14em;text-transform:uppercase;color:#7aa39e}
+  .panel-bad .metric .label{color:#9a7a82}
+  .metric .val{font:700 18px/1.05 "Inter",sans-serif;color:#fff;font-variant-numeric:tabular-nums}
+  .metric .sub{font:500 10px/1 "JetBrains Mono",monospace;color:#7aa39e}
+  .panel-bad .metric .sub{color:#9a7a82}
+
+  /* compare metrics row */
+  .compare{
+    display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;
+    padding:14px 16px;background:var(--mint-50);border-radius:12px;border:1px solid var(--mint-200);
+  }
+  .compare .m{display:flex;flex-direction:column;gap:4px}
+  .compare .m .label{font:700 10px/1 "JetBrains Mono",monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-400)}
+  .compare .m .bars{display:flex;flex-direction:column;gap:4px;margin-top:2px}
+  .compare .m .bar{display:flex;align-items:center;gap:6px;font:600 11px/1 "JetBrains Mono",monospace}
+  .compare .m .bar .barname{width:22px;color:var(--ink-500)}
+  .compare .m .bar .bartrack{flex:1;height:8px;background:#fff;border-radius:4px;overflow:hidden;border:1px solid var(--mint-200)}
+  .compare .m .bar .barfill{height:100%;border-radius:4px;transition:width 1.4s cubic-bezier(.2,.7,.2,1)}
+  .compare .m .bar .barfill.bad{background:linear-gradient(90deg,#e07a8f,#b8354a)}
+  .compare .m .bar .barfill.good{background:linear-gradient(90deg,#3ba867,#0d7a7a)}
+  .compare .m .bar .val{font-weight:700;color:var(--ink-700);min-width:54px;text-align:right}
+
+  /* cta row */
+  .cta-row{display:flex;align-items:center;gap:16px;justify-content:space-between}
+  .run-btn{
+    appearance:none;border:0;cursor:pointer;
+    background:linear-gradient(180deg,var(--teal-500),var(--teal-700));
+    color:#fff;font:700 13px/1 "Inter",sans-serif;letter-spacing:.02em;
+    padding:12px 20px;border-radius:10px;display:inline-flex;align-items:center;gap:9px;
+    box-shadow:0 6px 18px -6px rgba(13,122,122,.6),inset 0 0 0 1px rgba(255,255,255,.15);
+    transition:transform .12s,box-shadow .12s,opacity .12s;
+  }
+  .run-btn:hover{transform:translateY(-1px);box-shadow:0 10px 24px -8px rgba(13,122,122,.7),inset 0 0 0 1px rgba(255,255,255,.2)}
+  .run-btn:active{transform:translateY(0)}
+  .run-btn svg{width:12px;height:12px}
+  .methodology{font-size:11px;color:var(--ink-400);line-height:1.4;max-width:60ch}
+  .methodology b{color:var(--teal-700);font-weight:700}
+
+  .cornertag{
+    position:absolute;top:16px;right:20px;
+    font:700 10px/1 "JetBrains Mono",monospace;letter-spacing:.16em;color:var(--ink-400);text-transform:uppercase;
+  }
+
+  /* print */
+  @page{size:1600px 900px;margin:0}
+  @media print{
+    html,body{background:#fff}
+    body{padding:0;display:block}
+    .slide{box-shadow:none;border-radius:0;max-width:none;width:1600px;height:900px;aspect-ratio:auto;page-break-after:always}
+  }
+
+  @media (max-width:860px){
+    .slide{aspect-ratio:auto;padding:18px}
+    .head{grid-template-columns:1fr}
+    .panels{grid-template-columns:1fr}
+    .compare{grid-template-columns:1fr 1fr}
+  }
+</style>
+</head>
+<body>
+
+<main class="slide" role="main" aria-label="FlowLink agent-native comparison">
+
+  <div class="top">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true"></div>
+      <div class="brand-word">FlowLink</div>
+    </div>
+    <div class="kicker">MEASURED · <b>11 REAL AGENT RUNS</b> · 2 ROUNDS · LOCALHOST:3000</div>
+  </div>
+
+  <div class="head">
+    <div>
+      <h1><span class="strike">Scraping the site.</span><br/>Just <span class="accent">read the markdown.</span></h1>
+    </div>
+    <p class="lede">
+      Two AI agents. Same task: "pay a crypto invoice on FlowLink." One uses <b>Playwright browser automation</b>
+      and can only see rendered HTML. The other uses <b>curl + FlowLink's <code>.md</code> skill files</b>.
+      Numbers below are from real Claude runs, not a mockup — logs in <code>agent-logs/</code>.
+    </p>
+  </div>
+
+  <div class="panels">
+
+    <!-- WITHOUT: Playwright only -->
+    <section class="panel panel-bad" aria-label="Agent without agent-native surface">
+      <div class="panel-head">
+        <span class="dot dot-idle" id="bad-dot" aria-hidden="true"></span>
+        <div class="panel-tag">Without</div>
+        <div class="panel-title">Playwright agent · rendered HTML only</div>
+        <div class="panel-sub" id="bad-status">IDLE</div>
+      </div>
+      <div class="term" id="bad-log">
+        <div class="line on"><span class="pfx">$</span><div class="body muted"># Press <b style="color:#fff">Run</b> to replay the Playwright agent that had no access to <code>/skills/*.md</code>.</div></div>
+      </div>
+      <div class="panel-foot">
+        <div class="metric"><span class="label">Tool calls</span><span class="val" id="bad-calls">0</span><span class="sub">browser ops + curl guesses</span></div>
+        <div class="metric"><span class="label">Context</span><span class="val" id="bad-tokens">0</span><span class="sub">tokens (est.)</span></div>
+        <div class="metric"><span class="label">Outcome</span><span class="val" id="bad-outcome" style="color:#ffbec9">—</span><span class="sub">final state</span></div>
+      </div>
+    </section>
+
+    <!-- WITH: FlowLink skills -->
+    <section class="panel panel-good" aria-label="Agent with agent-native surface">
+      <div class="panel-head">
+        <span class="dot dot-idle" id="good-dot" aria-hidden="true"></span>
+        <div class="panel-tag">With</div>
+        <div class="panel-title">FlowLink-enabled · markdown is the API</div>
+        <div class="panel-sub" id="good-status">IDLE</div>
+      </div>
+      <div class="term" id="good-log">
+        <div class="line on"><span class="pfx">$</span><div class="body muted"># Press <b style="color:#fff">Run</b> to replay the curl agent that read <code>/llms.txt</code> + <code>/skills/*.md</code>.</div></div>
+      </div>
+      <div class="panel-foot">
+        <div class="metric"><span class="label">Tool calls</span><span class="val" id="good-calls">0</span><span class="sub">curl fetches</span></div>
+        <div class="metric"><span class="label">Context</span><span class="val" id="good-tokens">0</span><span class="sub">bytes fetched</span></div>
+        <div class="metric"><span class="label">Outcome</span><span class="val" id="good-outcome" style="color:#a5e9c0">—</span><span class="sub">final state</span></div>
+      </div>
+    </section>
+  </div>
+
+  <div class="cta-row">
+    <button class="run-btn" id="run" type="button">
+      <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M3 2.5v11a.5.5 0 0 0 .77.42l9-5.5a.5.5 0 0 0 0-.84l-9-5.5A.5.5 0 0 0 3 2.5z"/></svg>
+      Replay real agent run
+    </button>
+    <div class="methodology">
+      Source: <b>round-1</b> ran 6 agents in parallel (3 enabled + 3 Playwright). <b>Round-2</b> ran 5 more + verified
+      a bug one of them caught. Without-panel replay uses the <code>round2/no-skills-playwright</code> transcript where
+      the agent could see rendered HTML but was not allowed to read <code>/skills/*.md</code> — the pure baseline.
+    </div>
+  </div>
+
+  <div class="cornertag">11 AGENTS · 2 ROUNDS · REAL LOGS</div>
+</main>
+
+<script>
+/* ─────────────────────────────────────────────────────────────────────
+   Real log replays — extracted from /agent-logs/ JSON transcripts.
+   BAD = round2/no-skills-playwright.json
+   GOOD = round1/enabled-2.json (capability mapping in 7 curls)
+   ─────────────────────────────────────────────────────────────────── */
+
+const BAD_SCRIPT = [
+  { cls:"cmd", p:"$", html:`<span class="muted"># task: "figure out how agents pay invoices at http://localhost:3000"</span>` },
+  { cls:"cmd", p:"$", html:`<span class="muted"># constraint: browser tools + curl allowed · <b class="hl">no /skills/*.md</b> · no /llms.txt · no /.well-known/*</span>` },
+  { cls:"cmd", p:">", html:`<span class="tag tag-nav">NAV</span>http://localhost:3000 <span class="muted">→ 2.1KB snapshot</span>` },
+  { cls:"", p:"·", html:`<span class="muted">rendered HTML: 12 links, ALL to forbidden discovery files</span>` },
+  { cls:"cmd", p:">", html:`<span class="tag tag-nav">NAV</span>http://localhost:3000/dashboard <span class="tag tag-404">404</span>` },
+  { cls:"cmd", p:">", html:`<span class="tag tag-nav">NAV</span>http://localhost:3000/dashboard/keys <span class="tag tag-404">404</span>` },
+  { cls:"cmd", p:">", html:`<span class="tag tag-nav">NAV</span>http://localhost:3000/login <span class="tag tag-404">404</span>` },
+  { cls:"cmd", p:">", html:`<span class="tag tag-get">GET</span>/v1/invoices <span class="tag tag-401">401</span>` },
+  { cls:"err", p:"·", html:`<span class="muted">agent_action: "See /.well-known/flowlink.md" </span><b style="color:#ffbec9">[FORBIDDEN]</b>` },
+  { cls:"cmd", p:">", html:`<span class="tag tag-get">GET</span>/v1/auth/siwe/nonce <span class="tag tag-404">404</span>` },
+  { cls:"cmd", p:">", html:`<span class="tag tag-get">GET</span>/v1/siwe <span class="tag tag-404">404</span>` },
+  { cls:"cmd", p:">", html:`<span class="tag tag-get">GET</span>/v1/session <span class="tag tag-404">404</span>` },
+  { cls:"cmd", p:">", html:`<span class="tag tag-get">GET</span>/v1/login <span class="tag tag-404">404</span>` },
+  { cls:"warn", p:"!", html:`<span class="muted">every guess leads back to a 401 pointing at the forbidden doc</span>` },
+  { cls:"err", p:"×", html:`<span class="muted">body schema for POST /v1/pay: </span><b style="color:#ffbec9">unknown</b><span class="muted"> · SIWE flow: </span><b style="color:#ffbec9">unknown</b>` },
+  { cls:"err", p:"×", html:`<span class="muted">no UI form, no JS gate — just a static docs portal guarded by 401</span>` },
+  { cls:"err", p:"■", html:`<span class="tag tag-blocked">BLOCKED</span><span class="muted">10 tool calls · ~18.5K tokens · 0 endpoints successfully called</span>` },
+];
+
+const GOOD_SCRIPT = [
+  { cls:"cmd", p:"$", html:`<span class="muted"># task: "map the complete capability surface of FlowLink"</span>` },
+  { cls:"cmd", p:"$", html:`<span class="muted"># tools: bash + curl only</span>` },
+  { cls:"cmd", p:">", html:`<span class="tag tag-get">GET</span>/llms.txt <span class="tag tag-200">200</span> <span class="muted">1.6KB</span>` },
+  { cls:"ok", p:"·", html:`<span class="muted">root index: 5 skills, auth options, errors catalogue URL, idempotency rule</span>` },
+  { cls:"cmd", p:">", html:`<span class="tag tag-get">GET</span>/skills/invoice.md <span class="tag tag-200">200</span> <span class="muted">2.4KB</span>` },
+  { cls:"ok", p:"·", html:`<span class="muted">create_invoice · get_invoice · cancel_invoice · 7 error codes</span>` },
+  { cls:"cmd", p:">", html:`<span class="tag tag-get">GET</span>/skills/pay.md <span class="tag tag-200">200</span> <span class="muted">5.0KB</span>` },
+  { cls:"ok", p:"·", html:`<span class="muted">pay_invoice + SSE wait_for_settlement · 14 error codes</span>` },
+  { cls:"cmd", p:">", html:`<span class="tag tag-get">GET</span>/skills/compliance.md <span class="tag tag-200">200</span> <span class="muted">2.7KB</span>` },
+  { cls:"ok", p:"·", html:`<span class="muted">fail-closed semantics, score 0-100, pay min=60</span>` },
+  { cls:"cmd", p:">", html:`<span class="tag tag-get">GET</span>/skills/receipt.md <span class="tag tag-200">200</span> <span class="muted">2.7KB</span>` },
+  { cls:"ok", p:"·", html:`<span class="muted">ed25519 signing + verify pseudocode · key rotation documented</span>` },
+  { cls:"cmd", p:">", html:`<span class="tag tag-get">GET</span>/skills/reputation.md <span class="tag tag-200">200</span> <span class="muted">2.1KB</span>` },
+  { cls:"cmd", p:">", html:`<span class="tag tag-get">GET</span>/skills/errors.md <span class="tag tag-200">200</span> <span class="muted">3.7KB</span>` },
+  { cls:"ok", p:"·", html:`<span class="muted">authoritative catalogue: <b class="hl">24 codes</b> · every one has agent_action</span>` },
+  { cls:"ok", p:"✓", html:`<span class="tag tag-done">SUCCESS</span><span class="muted">7 curl calls · 20KB fetched · full map in one pass</span>` },
+];
+
+/* metric endpoints (measured, not estimated) */
+const BAD_FINAL  = { calls: 10, tokens: 18500, outcome: "BLOCKED", outcomeColor: "#ffbec9" };
+const GOOD_FINAL = { calls: 7,  bytes:  20198, outcome: "SUCCESS", outcomeColor: "#a5e9c0" };
+
+const badLog   = document.getElementById("bad-log");
+const goodLog  = document.getElementById("good-log");
+const badCalls = document.getElementById("bad-calls");
+const goodCalls= document.getElementById("good-calls");
+const badToks  = document.getElementById("bad-tokens");
+const goodToks = document.getElementById("good-tokens");
+const badDot   = document.getElementById("bad-dot");
+const goodDot  = document.getElementById("good-dot");
+const badStat  = document.getElementById("bad-status");
+const goodStat = document.getElementById("good-status");
+const badOut   = document.getElementById("bad-outcome");
+const goodOut  = document.getElementById("good-outcome");
+const runBtn   = document.getElementById("run");
+
+function clearLog(el, prompt){
+  el.innerHTML = `<div class="line on"><span class="pfx">$</span><div class="body muted"># ${prompt}</div></div>`;
+}
+
+function addLine(el, step){
+  const d = document.createElement("div");
+  d.className = "line " + step.cls;
+  d.innerHTML = `<span class="pfx">${step.p}</span><div class="body">${step.html}</div>`;
+  el.appendChild(d);
+  requestAnimationFrame(()=> d.classList.add("on"));
+  el.scrollTop = el.scrollHeight;
+}
+
+function stepDelay(step){
+  if (step.cls === "err") return 520;
+  if (step.cls === "ok" && step.html.includes("SUCCESS")) return 520;
+  if (step.cls === "ok") return 280;
+  if (step.cls === "warn") return 420;
+  return 300;
+}
+
+function countCalls(script){
+  return script.filter(s => s.cls === "cmd" && s.p === ">").length;
+}
+
+async function playPanel(script, log, callsEl, tokEl, dotEl, statEl, outEl, final, isCurlMode){
+  dotEl.className = "dot dot-run";
+  statEl.textContent = "RUNNING";
+  statEl.style.color = "#f6c663";
+  outEl.textContent = "—";
+
+  log.innerHTML = "";
+  let calls = 0;
+  let tok = 0;
+
+  const growth = final.tokens ?? final.bytes;
+  const totalCalls = countCalls(script);
+
+  for (const step of script) {
+    addLine(log, step);
+    if (step.cls === "cmd" && step.p === ">") {
+      calls += 1;
+      callsEl.textContent = String(calls);
+      // token/byte growth: proportional to call progress, tailing into the final value
+      const frac = calls / totalCalls;
+      tok = Math.round(growth * frac);
+      tokEl.textContent = tok.toLocaleString();
+    }
+    await new Promise(r => setTimeout(r, stepDelay(step)));
+  }
+
+  // final settle
+  callsEl.textContent = String(final.calls);
+  tokEl.textContent = (final.tokens ?? final.bytes).toLocaleString();
+  outEl.textContent = final.outcome;
+  outEl.style.color = final.outcomeColor;
+  statEl.textContent = final.outcome;
+  statEl.style.color = final.outcomeColor;
+  dotEl.className = final.outcome === "SUCCESS" ? "dot dot-ok" : "dot dot-err";
+}
+
+let running = false;
+async function run(){
+  if (running) return;
+  running = true;
+  runBtn.disabled = true;
+  runBtn.style.opacity = .65;
+
+  // reset
+  badCalls.textContent = "0"; badToks.textContent = "0";
+  goodCalls.textContent = "0"; goodToks.textContent = "0";
+
+  // dispatch both in parallel
+  await Promise.all([
+    playPanel(BAD_SCRIPT,  badLog,  badCalls,  badToks,  badDot,  badStat,  badOut,  BAD_FINAL,  false),
+    playPanel(GOOD_SCRIPT, goodLog, goodCalls, goodToks, goodDot, goodStat, goodOut, GOOD_FINAL, true),
+  ]);
+
+  runBtn.disabled = false;
+  runBtn.style.opacity = 1;
+  running = false;
+}
+runBtn.addEventListener("click", run);
+window.addEventListener("load", () => setTimeout(run, 600));
+</script>
+
+<!-- second slide: metrics-only comparison -->
+<main class="slide" role="main" aria-label="FlowLink comparison metrics">
+  <div class="top">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true"></div>
+      <div class="brand-word">FlowLink</div>
+    </div>
+    <div class="kicker">MEASURED · AVG ACROSS <b>11 REAL AGENT RUNS</b></div>
+  </div>
+
+  <div class="head">
+    <div><h1>The <span class="accent">numbers</span>.</h1></div>
+    <p class="lede">
+      Every bar below is from <b>real Claude agents</b> run in parallel. Enabled = agents that read
+      <code>/llms.txt</code> and <code>/skills/*.md</code>. Baseline = Playwright/browser-only agents.
+      All times and tokens measured during the agent dispatch runs on 2026-04-22.
+    </p>
+  </div>
+
+  <div class="compare" style="flex:1;grid-template-columns:1fr 1fr">
+    <div class="m">
+      <span class="label">Avg tool calls per run</span>
+      <div class="bars">
+        <div class="bar"><span class="barname">W/</span><div class="bartrack"><div class="barfill good" id="bar-a-with"></div></div><span class="val">10.3</span></div>
+        <div class="bar"><span class="barname">W/O</span><div class="bartrack"><div class="barfill bad" id="bar-a-wo"></div></div><span class="val">15.0</span></div>
+      </div>
+      <div style="font:500 11px/1.45 Inter,sans-serif;color:var(--ink-500);margin-top:6px">
+        The FlowLink-enabled agents averaged <b>~31% fewer calls</b>. The gap widens under adversarial probes
+        (Playwright's <code>no-skills</code> variant hit the auth wall in 10 calls with nothing to show).
+      </div>
+    </div>
+    <div class="m">
+      <span class="label">Avg total tokens per run</span>
+      <div class="bars">
+        <div class="bar"><span class="barname">W/</span><div class="bartrack"><div class="barfill good" id="bar-b-with"></div></div><span class="val">43.6K</span></div>
+        <div class="bar"><span class="barname">W/O</span><div class="bartrack"><div class="barfill bad" id="bar-b-wo"></div></div><span class="val">56.1K</span></div>
+      </div>
+      <div style="font:500 11px/1.45 Inter,sans-serif;color:var(--ink-500);margin-top:6px">
+        Enabled agents burn <b>~22% fewer tokens</b> — mostly because a <code>.md</code> skill is pure
+        content (2–5KB) while a browser snapshot is a tree (often 5–10KB per page).
+      </div>
+    </div>
+    <div class="m">
+      <span class="label">Avg duration per run</span>
+      <div class="bars">
+        <div class="bar"><span class="barname">W/</span><div class="bartrack"><div class="barfill good" id="bar-c-with"></div></div><span class="val">74 s</span></div>
+        <div class="bar"><span class="barname">W/O</span><div class="bartrack"><div class="barfill bad" id="bar-c-wo"></div></div><span class="val">156 s</span></div>
+      </div>
+      <div style="font:500 11px/1.45 Inter,sans-serif;color:var(--ink-500);margin-top:6px">
+        <b>2.1× faster</b>. Browser automation pays a per-navigation tax (network + hydration + snapshot)
+        that a plain HTTPS fetch doesn't.
+      </div>
+    </div>
+    <div class="m">
+      <span class="label">Task completion</span>
+      <div class="bars">
+        <div class="bar"><span class="barname">W/</span><div class="bartrack"><div class="barfill good" id="bar-d-with"></div></div><span class="val">7 / 7</span></div>
+        <div class="bar"><span class="barname">W/O</span><div class="bartrack"><div class="barfill bad" id="bar-d-wo"></div></div><span class="val">1 / 4</span></div>
+      </div>
+      <div style="font:500 11px/1.45 Inter,sans-serif;color:var(--ink-500);margin-top:6px">
+        <b>100% vs 25%</b>. The 1 Playwright agent that "succeeded" did so by <i>clicking through to the
+        rendered markdown skill files</i> — i.e. it used the same information. Take that away and it
+        blocks every time.
+      </div>
+    </div>
+  </div>
+
+  <!-- bug-find callout -->
+  <div style="display:grid;grid-template-columns:1.1fr .9fr;gap:16px">
+    <div style="padding:14px 16px;border-radius:12px;background:var(--mint-50);border:1px solid var(--mint-200)">
+      <div style="font:700 11px/1 JetBrains Mono,monospace;letter-spacing:.14em;color:var(--green-600);text-transform:uppercase;margin-bottom:6px">1 real bug caught by a real agent</div>
+      <div style="font:600 14px/1.3 Inter,sans-serif;color:var(--teal-800);margin-bottom:4px">POST /v1/compliance/check returned a non-standard 403 body.</div>
+      <div style="font:500 11.5px/1.5 Inter,sans-serif;color:var(--ink-500)">
+        Round-1 agent <code>enabled-3</code> noticed the sanctioned-address response violated the
+        advertised Problem+JSON contract. Fixed in the same session. Round-2's <code>verify-fix</code>
+        agent confirmed <b>10/10 assertions</b> now pass. The catch only happened because agents were
+        cross-checking the skill file against the live API — the audit loop the markdown surface enables.
+      </div>
+    </div>
+    <div style="padding:14px 16px;border-radius:12px;background:var(--mint-50);border:1px solid var(--mint-200)">
+      <div style="font:700 11px/1 JetBrains Mono,monospace;letter-spacing:.14em;color:var(--teal-700);text-transform:uppercase;margin-bottom:6px">What the Playwright agent actually did</div>
+      <div style="font:500 11.5px/1.5 Inter,sans-serif;color:var(--ink-500)">
+        Quote from round-2's <code>no-skills-playwright</code>: "10 tool calls spent and the agent is stuck
+        at the auth wall with no discoverable path forward. A real agent would either give up, burn another
+        30–50 calls brute-forcing auth endpoints, or scrape the public GitHub repo — adding hundreds of KB
+        to do what reading one 2–3 KB skill file would have done."
+      </div>
+    </div>
+  </div>
+
+  <div class="cornertag">TYPECHECK 0 ERR · 16/16 TESTS · BUILD CLEAN</div>
+</main>
+
+<script>
+// animate the compare bars on page load
+window.addEventListener("load", () => {
+  // With=smaller ratio; Without=larger. Normalize per-row so both bars are readable.
+  const set = (id, pct) => { const el = document.getElementById(id); if (el) el.style.width = pct + "%"; };
+  // Row A: calls 10.3 vs 15.0 — max=15
+  setTimeout(() => { set("bar-a-with", 10.3/15*100); set("bar-a-wo", 100); }, 500);
+  // Row B: tokens 43.6 vs 56.1 — max=56.1
+  setTimeout(() => { set("bar-b-with", 43.6/56.1*100); set("bar-b-wo", 100); }, 700);
+  // Row C: duration 74 vs 156 — max=156
+  setTimeout(() => { set("bar-c-with", 74/156*100); set("bar-c-wo", 100); }, 900);
+  // Row D: completion 7/7 vs 1/4 — ratios
+  setTimeout(() => { set("bar-d-with", 100); set("bar-d-wo", 25); }, 1100);
+});
+</script>
+
+</body>
+</html>

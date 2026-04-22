@@ -1,0 +1,12 @@
+{
+  "agent_id": "round3-mcp",
+  "tool_calls": 9,
+  "mcp_valid": true,
+  "tool_count": 6,
+  "all_description_urls_resolve": true,
+  "openapi_yaml_exists": false,
+  "bugs_found": [
+    "GET /.well-known/openapi.yaml returns 404 even though /llms.txt advertises 'OpenAPI 3.1: https://flowlink.ink/.well-known/openapi.yaml'. Either ship the file or remove the line from llms.txt."
+  ],
+  "notes": "MCP manifest at /.well-known/mcp.json is well-formed: has $schema, name=flowlink, version=1.0.0, vendor, servers[1], tools[6]. servers[0].transport='sse', servers[0].url='https://flowlink.ink/mcp', auth.type='bearer', auth.token_url ends in /v1/auth/siwe/verify (matches spec). auth.scopes = [invoice:read, invoice:write, pay:execute, receipt:read, compliance:check, reputation:read] and all six reconcile exactly with the 'scopes:' frontmatter field in /skills/invoice.md, /skills/pay.md, /skills/compliance.md, /skills/receipt.md, /skills/reputation.md. errors.md lists insufficient_scope (403) with per-skill scope requirements consistent with the manifest. All 6 tool.description_url values resolve 200 with non-empty bodies (5 unique URLs since create_invoice and get_invoice both point to /skills/invoice.md; sizes 2089-5001 bytes). Only defect: advertised openapi.yaml missing - BLOCKER if agents rely on llms.txt to auto-discover machine-readable spec."
+}

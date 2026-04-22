@@ -1,0 +1,45 @@
+{
+  "scenario": "playwright",
+  "agent_id": "playwright-3",
+  "task": "attempt full pay flow via browser",
+  "tool_calls": 16,
+  "estimated_context_tokens": 18000,
+  "final_state": "blocked",
+  "furthest_step_reached": "Enumerated docs portal routes (/, /skills/*.md, /.well-known/flowlink.md, /.well-known/mcp.json, /llms.txt). Confirmed no interactive UI exists on localhost:3000 — every functional route (/dashboard, /dashboard/keys, /login, /invoices, /invoice/new, /pay, /checkout, /app, /agent) returns 404.",
+  "what_worked": [
+    "Static markdown skill specs load instantly and are fully readable by a browser (invoice.md, pay.md, flowlink.md, mcp.json, llms.txt).",
+    "Landing page renders with clear affordances pointing agents at /llms.txt and /.well-known/flowlink.md — no JS required to discover the API surface.",
+    "MCP manifest at /.well-known/mcp.json is served as plain JSON — a browser can read it without parsing any client-side framework.",
+    "Site title 'FlowLink — Agent-Native Payments' and the copy 'Markdown is the API' accurately describe the deployment: localhost:3000 is a static docs portal, not an app."
+  ],
+  "what_failed": [
+    "No login page on localhost:3000. /login, /dashboard, /dashboard/keys all 404. The docs explicitly say 'generate a scoped API key at /dashboard/keys (human login required)' — but that path exists only on the production host flowlink.ink, not the local mirror.",
+    "No invoice creation UI. /invoices, /invoice/new, /pay, /checkout all 404. There is no HTML form to fill, no JS SPA to interact with — so Playwright literally has nothing to click for the pay flow.",
+    "SIWE auth cannot be completed from a vanilla Playwright browser: the flow demands an EIP-4361 message signed by a wallet private key (MetaMask / WalletConnect). Playwright has no wallet extension installed, so the signature step is unreachable.",
+    "The write endpoints (POST /v1/auth/siwe/nonce, POST /v1/invoices, POST /v1/pay) live on the remote host flowlink.ink. They are not proxied by localhost:3000 — navigating to http://localhost:3000/v1/auth/siwe/nonce triggers ERR_HTTP_RESPONSE_CODE_FAILURE.",
+    "Because the pay flow is curl-first (every example in the docs is a shell block), a pure browser has no affordance to execute it — and the task constraint forbids curl/fetch/WebFetch."
+  ],
+  "js_gates_encountered": 0,
+  "context_observations": "The cost story is inverted here: a human-oriented SPA would have burned thousands of tokens on DOM snapshots, wallet popups, and checkout iframes — but FlowLink localhost:3000 has no SPA at all, so 16 browser calls sufficed to fully characterize the surface at ~18k tokens. The bottleneck is not JS-gates but the complete absence of a browser-driven write path: the site is deliberately API-only, and wallet-signing can't be scripted without an extension.",
+  "log": [
+    {"step": 1, "action": "navigate", "url": "http://localhost:3000", "result": "200 OK, title 'FlowLink — Agent-Native Payments', 5 skill links + 3 agent-quickstart links"},
+    {"step": 2, "action": "snapshot", "result": "Static marketing page. No forms, no buttons, no login — only <a> links to /skills/*.md and /.well-known/*"},
+    {"step": 3, "action": "click invoice skill", "result": "Ref stale, re-navigated"},
+    {"step": 4, "action": "navigate /skills/invoice.md", "result": "Markdown doc describing POST /v1/invoices on flowlink.ink — no local endpoint"},
+    {"step": 5, "action": "evaluate body text", "result": "Confirms 'For dev/test without a wallet, generate a scoped API key at /dashboard/keys (human login required)'"},
+    {"step": 6, "action": "navigate /dashboard", "result": "404"},
+    {"step": 7, "action": "navigate /dashboard/keys", "result": "404"},
+    {"step": 8, "action": "navigate /login", "result": "404"},
+    {"step": 9, "action": "navigate /invoices", "result": "404"},
+    {"step": 10, "action": "navigate /.well-known/flowlink.md", "result": "Same agent quickstart, base URL flowlink.ink"},
+    {"step": 11, "action": "navigate /.well-known/mcp.json", "result": "MCP manifest: transport=sse url=https://flowlink.ink/mcp, auth=bearer via SIWE verify"},
+    {"step": 12, "action": "navigate /v1/auth/siwe/nonce", "result": "ERR_HTTP_RESPONSE_CODE_FAILURE — endpoint not on localhost"},
+    {"step": 13, "action": "navigate /pay", "result": "404"},
+    {"step": 14, "action": "navigate /llms.txt", "result": "Plain text agent index, base URL flowlink.ink"},
+    {"step": 15, "action": "navigate /invoice/new, /checkout, /app, /agent", "result": "All 404"},
+    {"step": 16, "action": "navigate /skills/pay.md", "result": "Confirms pay flow is POST /v1/pay with JWT bearer; settlement streams via SSE on /v1/transactions/{id}/events"},
+    {"step": 17, "action": "console_messages error", "result": "0 errors in last navigation"},
+    {"step": 18, "action": "navigate /.well-known/openapi.yaml", "result": "404 — OpenAPI only exists on flowlink.ink per llms.txt"},
+    {"step": 19, "action": "browser_close", "result": "Session closed"}
+  ]
+}

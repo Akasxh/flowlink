@@ -1,0 +1,12 @@
+{
+  "agent_id": "round2-audit",
+  "tool_calls": 18,
+  "skill_files_linked_from_llms": 6,
+  "mcp_tools_with_matching_skill": 6,
+  "errors_in_catalogue_matching_live": 3,
+  "inconsistencies": [
+    "receipt.md line 90 documents error code 'receipt_not_ready' (status 202) but this code is absent from /skills/errors.md catalogue"
+  ],
+  "missing_docs": [],
+  "final_state": "issues_found"
+}

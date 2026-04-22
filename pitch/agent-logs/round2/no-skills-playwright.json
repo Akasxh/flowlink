@@ -1,0 +1,10 @@
+{
+  "agent_id": "round2-no-skills",
+  "tool_calls": 10,
+  "estimated_context_tokens": 18500,
+  "final_state": "blocked",
+  "what_you_learned": "Landing page says 'FlowLink — Agent-Native Payments', compliance-first, HashKey Chain testnet (id 133), ed25519 receipts, HSP Single-Pay mandates, OFAC screening. By guessing REST conventions I probed /v1/* and found three live endpoints: GET /v1/invoices (401), POST /v1/pay (401, OPTIONS 204, allow: OPTIONS,POST), GET /v1/receipts (401). All return RFC 7807 problem+json. CORS allows Authorization, Content-Type, Idempotency-Key, X-Request-Id. CSP whitelists api-testnet.hsp.hashkey.com and hashkeychain-testnet.alt.technology. Auth is required and must be Bearer token via SIWE flow — confirmed by the 'agent_action' error field. Chain id 133, request-id format req_<ulid>.",
+  "what_you_didnt_learn": "Everything needed to actually pay: (1) the SIWE login/nonce endpoint path (every /v1/auth, /v1/siwe, /v1/login guess returned 404), (2) the JSON body schema for POST /v1/pay (mandate format? amount? token? chain?), (3) the GET /v1/invoices schema and how to read a specific invoice, (4) how to construct an HSP Single-Pay mandate, (5) the ed25519 public key for receipt verification, (6) rate limits and idempotency semantics. The error messages repeatedly point at /.well-known/flowlink.md which the agent is not allowed to read.",
+  "would_a_real_agent_succeed": false,
+  "cost_story": "Ten tool calls spent and the agent is stuck at the auth wall with no discoverable path forward — it found the endpoints exist but cannot construct a valid request. A real agent would either (a) give up, (b) burn another 30-50 calls brute-forcing auth endpoint names and body shapes with near-zero success probability, or (c) scrape the public GitHub repo linked in the footer (github.com/Akasxh/flowlink) as a side channel — adding hundreds of KB of source-code tokens to do what reading one 2-3 KB skill file would have done. Skills/llms.txt collapse this from an expensive dead-end into a single cheap fetch."
+}

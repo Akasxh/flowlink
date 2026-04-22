@@ -1,0 +1,37 @@
+{
+  "agent_id": "round2-orch",
+  "tool_calls": 5,
+  "bytes_fetched": 4861,
+  "role_handoffs_possible": [
+    "payee->payer via invoice_id (inv_01H...) returned in invoice.create 201 response; payer passes same id as pay.invoice_id",
+    "payer->auditor via transaction_id (txn_01H...) returned in pay 202 response; auditor calls GET /v1/transactions/{id} with same handle",
+    "payer->auditor via receipt_id (rcp_...) emitted in SSE receipt_ready event; auditor/reputation can fetch signed proof",
+    "payer->compliance via payer_address preflighted through POST /v1/compliance/check before pay commits; same address string threads through",
+    "payee->compliance via receiver_address preflighted at invoice.create time (compliance_blocked_sanctions 403 surfaces), same EIP-55 string",
+    "any-role->audit via request_id (req_01K...) present on every response, correlates server-side logs across roles",
+    "invoice <-> transaction via flowlink_id (flowlink:inv/01H...) as cross-skill canonical handle"
+  ],
+  "blockers_for_multi_agent": [
+    "No shared auth primitive: auditor, payer, payee all need separate SIWE or API-key tokens; no cap-delegation flow documented",
+    "No read-only scope for invoices: GET /v1/invoices requires same bearer as POST, so auditor cannot get a narrow read-only token from invoice owner without manual out-of-band token provisioning",
+    "No discovery endpoint for a given invoice_id's associated transaction_id: auditor with an invoice_id must guess or be handed txn_id; there is no GET /v1/invoices/{id}/transactions documented in skill files",
+    "Compliance fails-closed on upstream unavailability (503) — correct-by-design but means compliance agent is blocked by infra state it cannot bypass (today's cwd server hit this: fetch failed against OFAC)",
+    "SIWE flow is described only by reference in errors (see /.well-known/flowlink.md); no single-hop programmatic mint for inter-agent delegation"
+  ],
+  "what_works_well": [
+    "Every error response carries agent_action prose (e.g. 'Provide Authorization: Bearer <token>. See /.well-known/flowlink.md for SIWE flow.') telling the agent exactly the next state transition",
+    "application/problem+json envelope is uniform across 401/403/503 — parseable by a generic agent error handler without per-route logic",
+    "request_id is returned on every response including error paths, enabling cross-role tracing via server logs",
+    "Handle naming is stable and self-describing: inv_, txn_, rcp_, flowlink:inv/ prefixes let any role identify object type from the string",
+    "invoice_id is explicitly the input to pay.invoice_id in the pay.md contract — the payee->payer handoff is a documented one-field pass",
+    "transaction_id is the stable handle for pay.response, SSE channel URL, and auditor GET — a single id works across 3 endpoints",
+    "Compliance endpoint is auth-optional (public preflight) — enables a third-party compliance agent to check any address without credential exchange with the payee/payer",
+    "Skill files are self-contained with auth scope, idempotency semantics, and full error table per skill — enough for a role to plan without reading sibling skills"
+  ],
+  "skills_read": [
+    "invoice.md",
+    "pay.md",
+    "compliance.md",
+    ".well-known/flowlink.md (manifest)"
+  ]
+}

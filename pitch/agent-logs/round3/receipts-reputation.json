@@ -1,0 +1,11 @@
+{
+  "agent_id": "round3-rr",
+  "tool_calls": 9,
+  "assertions_passed": 10,
+  "assertions_failed": 2,
+  "bugs_found": [
+    "Test 2: GET /v1/receipts/rcp_nonexistent returns 401 auth_required instead of the documented 404 receipt_not_found. The skill doc at /skills/receipt.md lists receipt_not_found (404) as the primary error but never lists auth_required (401). Either update the doc to include auth_required, or perform auth-then-lookup so legitimately-authed callers get receipt_not_found (the current gate-on-auth behavior means receipt_not_found is effectively unobservable to unauthed probes).",
+    "Possible kid inconsistency: JWKS kid is 'flk-2026-04' but the receipt skill example shows signature.key_id = 'flk-receipt-2026-04'. The two identifiers should match (or the doc should clearly map receipt signing key_id -> JWKS kid) so verifiers can resolve the correct key."
+  ],
+  "notes": "Fetched both skill docs (receipt + reputation), both served as markdown with 200. Error responses are uniformly Problem+JSON (application/problem+json) with type/title/status/code/detail/request_id/agent_action fields — schema is consistent across 400/401/404. Test 4 (valid EIP-55 addr with no activity) correctly returns 404 not_found with detail 'no FlowLink activity for this address'. Test 5 (malformed addr) correctly returns 400 validation_error with detail 'not an EIP-55 address'. PEM envelope is a well-formed Ed25519 public key (MCowBQYDK2VwAyEA... — X.509 SPKI for Ed25519, 32-byte raw key). JWKS has one key with kty=OKP, crv=Ed25519, kid=flk-2026-04, use=sig, alg=EdDSA, x=base64url. Request IDs use ULID format (req_01K...). One additional observation: PEM endpoint currently publishes only the active key; skill doc claims rotated keys will follow active in the same file — not yet demonstrable at genesis but contract is documented."
+}

@@ -1,0 +1,661 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>FlowLink · Agent-Native by Design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --teal-900:#063a3a;
+    --teal-800:#0a4f4f;
+    --teal-700:#0c6363;
+    --teal-600:#0d7a7a;
+    --teal-500:#158b8b;
+    --teal-400:#1da0a0;
+    --green-600:#217a49;
+    --green-500:#2a9056;
+    --green-400:#3ba867;
+    --cyan-500:#2fc4c4;
+    --mint-50:#eef7f2;
+    --mint-100:#e3f1ea;
+    --mint-200:#cfe7db;
+    --ink-900:#0f1b22;
+    --ink-700:#1a2733;
+    --ink-500:#4a5a66;
+    --ink-400:#6b7a85;
+    --ink-200:#c6d0d7;
+    --paper:#ffffff;
+    --paper-soft:#f7fbfa;
+
+    --term-bg:#062e2e;
+    --term-bg-2:#0a3f3f;
+    --term-border:rgba(47,196,196,.18);
+    --term-text:#d8ece9;
+    --term-dim:#7aa39e;
+    --term-accent:#2fc4c4;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:#eef3f2;font-family:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink-700);min-height:100%}
+  body{display:flex;align-items:center;justify-content:center;padding:24px;background:
+    radial-gradient(1200px 600px at 10% 0%,#d9ebe6 0,transparent 60%),
+    radial-gradient(900px 500px at 100% 100%,#dbe8df 0,transparent 60%),
+    #eef3f2;}
+
+  /* 16:9 slide frame, screenshot-friendly */
+  .slide{
+    width:100%;
+    max-width:1600px;
+    aspect-ratio:16/9;
+    background:var(--paper);
+    border-radius:22px;
+    box-shadow:
+      0 1px 0 rgba(12,99,99,.06),
+      0 20px 60px -20px rgba(10,79,79,.35),
+      0 40px 120px -40px rgba(10,79,79,.25);
+    overflow:hidden;
+    position:relative;
+    display:grid;
+    grid-template-rows:auto 1fr auto;
+    padding:44px 56px 40px;
+    gap:22px;
+    container-type:inline-size;
+  }
+
+  /* top bar */
+  .top{display:flex;align-items:center;justify-content:space-between;gap:24px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .brand-mark{
+    width:38px;height:38px;border-radius:12px;
+    background:
+      radial-gradient(120% 120% at 30% 20%,#1fb3a3 0%,#0d7a7a 55%,#083f3f 100%);
+    position:relative;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.18), 0 8px 20px -8px rgba(13,122,122,.6);
+  }
+  .brand-mark::before,.brand-mark::after{
+    content:"";position:absolute;inset:7px;border-radius:50%;
+    border:2.5px solid transparent;
+  }
+  .brand-mark::before{border-top-color:#2fc4c4;border-right-color:#2fc4c4;transform:rotate(20deg)}
+  .brand-mark::after{border-bottom-color:#3ba867;border-left-color:#3ba867;transform:rotate(20deg)}
+  .brand-word{font-weight:800;font-size:22px;letter-spacing:-.01em;color:var(--teal-800)}
+  .kicker{
+    font-size:11px;font-weight:700;letter-spacing:.18em;color:var(--ink-400);
+    padding:8px 14px;border-radius:999px;background:var(--mint-50);
+    border:1px solid var(--mint-200);
+  }
+  .kicker b{color:var(--teal-700)}
+
+  /* heading row */
+  .head{display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:end}
+  h1{
+    font-size:clamp(36px, 4.4cqi, 64px);
+    font-weight:800;letter-spacing:-.02em;line-height:1.02;color:var(--teal-800);
+  }
+  h1 .accent{
+    background:linear-gradient(90deg,var(--teal-500),var(--green-500));
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .lede{
+    color:var(--ink-500);font-size:clamp(13px, 1.25cqi, 18px);line-height:1.55;
+    max-width:52ch;
+  }
+  .lede b{color:var(--ink-700);font-weight:600}
+
+  /* main two-panel */
+  .panels{
+    display:grid;grid-template-columns:1.25fr 1fr;gap:22px;min-height:0;
+  }
+
+  /* left: markdown / file viewer panel (dark teal, like the title slide) */
+  .mdpanel{
+    background:
+      linear-gradient(180deg,#0b5555 0%,#063737 100%);
+    border-radius:16px;overflow:hidden;position:relative;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.05), 0 10px 40px -20px rgba(6,55,55,.6);
+    display:grid;grid-template-rows:auto 1fr;min-height:0;
+  }
+  .mdpanel::before{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background:
+      radial-gradient(600px 200px at 0% 0%,rgba(47,196,196,.12),transparent 60%),
+      radial-gradient(500px 240px at 100% 100%,rgba(59,168,103,.10),transparent 60%);
+  }
+  .mdtabs{
+    display:flex;align-items:stretch;gap:2px;
+    background:rgba(0,0,0,.18);border-bottom:1px solid rgba(255,255,255,.06);
+    overflow-x:auto;scrollbar-width:none;
+  }
+  .mdtabs::-webkit-scrollbar{display:none}
+  .mdtab{
+    appearance:none;border:0;background:transparent;color:#9ec4c0;
+    font:600 12px/1 "JetBrains Mono",ui-monospace,monospace;
+    padding:14px 16px;cursor:pointer;white-space:nowrap;
+    border-bottom:2px solid transparent;transition:color .15s,border-color .15s,background .15s;
+  }
+  .mdtab .dot{
+    display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:8px;
+    background:var(--teal-400);vertical-align:middle;
+  }
+  .mdtab[data-k="manifest"] .dot{background:#2fc4c4}
+  .mdtab[data-k="invoice"]  .dot{background:#3ba867}
+  .mdtab[data-k="pay"]      .dot{background:#f6c663}
+  .mdtab[data-k="compliance"] .dot{background:#e07a8f}
+  .mdtab[data-k="receipt"]  .dot{background:#9ac6ff}
+  .mdtab[data-k="reputation"] .dot{background:#c8a6ff}
+  .mdtab:hover{color:#e6f4f1;background:rgba(255,255,255,.03)}
+  .mdtab.active{
+    color:#fff;background:rgba(47,196,196,.08);
+    border-bottom-color:var(--cyan-500);
+  }
+
+  .mdbody{
+    display:grid;grid-template-columns:auto 1fr;min-height:0;
+  }
+  .mdtree{
+    background:rgba(0,0,0,.22);color:#b9d8d4;
+    font:500 11.5px/1.9 "JetBrains Mono",ui-monospace,monospace;
+    padding:18px 14px 18px 20px;border-right:1px solid rgba(255,255,255,.06);
+    min-width:220px;
+  }
+  .mdtree .tline{color:#5f8a85}
+  .mdtree .tdir{color:#8fcec8}
+  .mdtree .tfile{color:#cfe9e6}
+  .mdtree .tfile.is-active{color:#fff;background:rgba(47,196,196,.14);border-radius:4px;padding:0 4px}
+  .mdtree .tlabel{font-size:10px;letter-spacing:.18em;color:#5f8a85;text-transform:uppercase;font-weight:700;margin-bottom:6px}
+
+  .mdview{
+    padding:18px 22px 18px 22px;
+    font:500 12.5px/1.65 "JetBrains Mono",ui-monospace,monospace;
+    color:var(--term-text);
+    overflow:auto;min-height:0;
+    scrollbar-width:thin;scrollbar-color:rgba(47,196,196,.3) transparent;
+  }
+  .mdview::-webkit-scrollbar{width:6px}
+  .mdview::-webkit-scrollbar-thumb{background:rgba(47,196,196,.3);border-radius:3px}
+  .mdpath{
+    font:600 10.5px/1 "JetBrains Mono",monospace;color:#7aa39e;
+    letter-spacing:.04em;margin-bottom:10px;display:flex;align-items:center;gap:8px;
+  }
+  .mdpath .httpget{
+    background:rgba(47,196,196,.15);color:#2fc4c4;padding:3px 7px;border-radius:4px;
+    font-weight:700;letter-spacing:.1em;
+  }
+  .mdview h1.md{font:800 18px/1.2 "Inter",sans-serif;color:#fff;margin:8px 0 6px}
+  .mdview h2.md{font:700 13.5px/1.2 "Inter",sans-serif;color:var(--cyan-500);margin:14px 0 6px;letter-spacing:.02em;text-transform:uppercase;font-size:11px;letter-spacing:.16em}
+  .mdview p.md{color:#cfe4e1;margin:0 0 8px;font-family:"Inter",sans-serif;font-size:13px;font-weight:400;line-height:1.6}
+  .mdview code.inline{background:rgba(47,196,196,.12);color:#8ee4e4;padding:1px 6px;border-radius:4px;font-size:11.5px}
+  .mdview ul.md{list-style:none;padding:0;margin:0 0 8px}
+  .mdview ul.md li{padding:2px 0;color:#cfe4e1;font-family:"Inter",sans-serif;font-size:13px;line-height:1.6;display:flex;gap:8px}
+  .mdview ul.md li::before{content:"—";color:#3ba867;font-weight:700}
+  .mdview .link{color:#8ee4e4;text-decoration:underline;text-decoration-color:rgba(142,228,228,.35)}
+  .mdview pre.md{
+    background:rgba(0,0,0,.3);border:1px solid rgba(47,196,196,.15);
+    border-radius:8px;padding:10px 12px;margin:6px 0 10px;
+    color:#cfe4e1;font-size:11.5px;overflow-x:auto;
+  }
+  .mdview .kw{color:#f6c663;font-weight:600}
+  .mdview .str{color:#8ee4e4}
+  .mdview .cm{color:#5f8a85;font-style:italic}
+
+  /* right: agent terminal */
+  .agentpanel{
+    background:var(--paper);
+    border-radius:16px;overflow:hidden;
+    box-shadow:inset 0 0 0 1px var(--mint-200), 0 10px 40px -20px rgba(10,79,79,.3);
+    display:grid;grid-template-rows:auto 1fr auto;min-height:0;
+  }
+  .agenthead{
+    padding:14px 18px;border-bottom:1px solid var(--mint-200);
+    display:flex;align-items:center;gap:10px;background:var(--mint-50);
+  }
+  .agentdot{width:10px;height:10px;border-radius:50%;background:var(--green-500);box-shadow:0 0 0 4px rgba(42,144,86,.18);animation:pulse 1.6s ease-in-out infinite}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 4px rgba(42,144,86,.18)}50%{box-shadow:0 0 0 8px rgba(42,144,86,.05)}}
+  .agenttitle{font-weight:700;color:var(--teal-800);font-size:13px;letter-spacing:.01em}
+  .agentsub{margin-left:auto;font:600 10.5px/1 "JetBrains Mono",monospace;color:var(--ink-400);letter-spacing:.1em;text-transform:uppercase}
+
+  .agentlog{
+    padding:14px 18px;
+    font:500 11.5px/1.55 "JetBrains Mono",ui-monospace,monospace;
+    color:var(--ink-700);
+    overflow:auto;min-height:0;
+    scrollbar-width:thin;
+  }
+  .logline{display:flex;gap:10px;align-items:flex-start;opacity:0;transform:translateY(3px);transition:opacity .22s,transform .22s;margin-bottom:3px}
+  .logline.on{opacity:1;transform:none}
+  .logline .arrow{color:var(--teal-500);font-weight:700}
+  .logline.ok  .arrow{color:var(--green-500)}
+  .logline.err .arrow{color:#d85a6c}
+  .logline .body{flex:1;color:var(--ink-700)}
+  .logline .body b{color:var(--teal-700);font-weight:700}
+  .logline .tag{
+    display:inline-block;padding:1px 7px;border-radius:4px;font-size:10.5px;font-weight:700;
+    letter-spacing:.04em;margin-right:6px;vertical-align:1px;
+  }
+  .tag.get{background:rgba(47,196,196,.14);color:var(--teal-600)}
+  .tag.call{background:rgba(42,144,86,.14);color:var(--green-600)}
+  .tag.chk{background:rgba(13,122,122,.08);color:var(--teal-700)}
+  .tag.out{background:rgba(246,198,99,.16);color:#a47300}
+  .muted{color:var(--ink-400)}
+  .hashline{color:var(--ink-400);font-size:11.5px}
+  .proof{
+    margin:4px 0 6px;padding:9px 12px;border-radius:10px;
+    background:linear-gradient(180deg,var(--mint-50),#fff);
+    border:1px solid var(--mint-200);
+    font-family:"Inter",sans-serif;
+  }
+  .proof .row{display:flex;align-items:center;gap:8px;padding:1px 0;font-size:12px;color:var(--ink-700);font-weight:500}
+  .proof .check{width:13px;height:13px;border-radius:50%;background:var(--green-500);color:#fff;display:inline-grid;place-items:center;font-size:8.5px;font-weight:900;flex:none}
+  .proof .chain{color:var(--ink-400);font:500 10.5px/1.4 "JetBrains Mono",monospace;margin-top:3px}
+
+  .agentfoot{
+    padding:12px 16px;border-top:1px solid var(--mint-200);background:#fafdfc;
+    display:flex;align-items:center;gap:10px;
+  }
+  .runbtn{
+    appearance:none;border:0;cursor:pointer;
+    background:linear-gradient(180deg,var(--teal-500),var(--teal-700));
+    color:#fff;font:700 12.5px/1 "Inter",sans-serif;letter-spacing:.02em;
+    padding:11px 16px;border-radius:10px;display:inline-flex;align-items:center;gap:8px;
+    box-shadow:0 6px 18px -6px rgba(13,122,122,.6), inset 0 0 0 1px rgba(255,255,255,.15);
+    transition:transform .12s,box-shadow .12s;
+  }
+  .runbtn:hover{transform:translateY(-1px);box-shadow:0 10px 24px -8px rgba(13,122,122,.7), inset 0 0 0 1px rgba(255,255,255,.2)}
+  .runbtn:active{transform:translateY(0)}
+  .runbtn svg{width:12px;height:12px}
+  .foothint{font-size:11px;color:var(--ink-400);margin-left:auto}
+  .foothint b{color:var(--teal-700)}
+
+  /* bottom: three compliance pills */
+  .pills{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:14px;
+  }
+  .pill{
+    background:var(--mint-50);
+    border-radius:14px;padding:14px 16px;
+    border-top:3px solid var(--teal-500);
+    display:flex;gap:12px;align-items:flex-start;
+    position:relative;
+  }
+  .pill:nth-child(2){border-top-color:var(--green-500)}
+  .pill:nth-child(3){border-top-color:var(--cyan-500)}
+  .pill .ico{
+    width:34px;height:34px;border-radius:9px;flex:none;
+    background:var(--paper);display:grid;place-items:center;
+    box-shadow:0 0 0 1px var(--mint-200);
+    color:var(--teal-700);
+  }
+  .pill:nth-child(2) .ico{color:var(--green-600)}
+  .pill:nth-child(3) .ico{color:var(--teal-600)}
+  .pill h4{font:700 13.5px/1.2 "Inter",sans-serif;color:var(--ink-900);margin-bottom:4px}
+  .pill p{font-size:11.8px;line-height:1.45;color:var(--ink-500)}
+  .pill p b{color:var(--ink-700);font-weight:600}
+
+  /* corner tag */
+  .cornertag{
+    position:absolute;top:16px;right:20px;
+    font:700 10px/1 "JetBrains Mono",monospace;letter-spacing:.16em;
+    color:var(--ink-400);text-transform:uppercase;
+  }
+
+  /* print / PDF export: exact 16:9 page, no chrome */
+  @page { size: 1600px 900px; margin: 0; }
+  @media print{
+    html,body{background:#fff}
+    body{padding:0;display:block}
+    .slide{box-shadow:none;border-radius:0;max-width:none;width:1600px;height:900px;aspect-ratio:auto;page-break-after:always}
+  }
+
+  /* tiny screen fallback */
+  @media (max-width:760px){
+    .slide{aspect-ratio:auto;padding:20px}
+    .head{grid-template-columns:1fr}
+    .panels{grid-template-columns:1fr;gap:14px}
+    .pills{grid-template-columns:1fr}
+    .mdtree{display:none}
+    .mdbody{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+
+<main class="slide" role="main" aria-label="FlowLink agent-native slide">
+
+  <!-- top -->
+  <div class="top">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true"></div>
+      <div class="brand-word">FlowLink</div>
+    </div>
+    <div class="kicker">BUILT FOR THE <b>AGENT ECONOMY</b> · HASHKEY CHAIN</div>
+  </div>
+
+  <!-- heading -->
+  <div class="head">
+    <div>
+      <h1>Agent-Native <span class="accent">by Design.</span><br/>Markdown is the API.</h1>
+    </div>
+    <p class="lede">
+      flowlink.ink isn't just a site humans visit — it's a tree of <b>.md files</b> that any agent
+      can read, reason over, and transact against. A <b>root manifest</b> exposes the product;
+      each <b>/skills/*.md</b> is a compliant tool the agent can call. <b>No SDK. No API keys.
+      No docs to scrape.</b> Just text.
+    </p>
+  </div>
+
+  <!-- main two-panel -->
+  <div class="panels">
+
+    <!-- LEFT: markdown file viewer -->
+    <section class="mdpanel" aria-label="FlowLink markdown source">
+      <div class="mdtabs" role="tablist">
+        <button class="mdtab active" data-k="manifest" role="tab"><span class="dot"></span>flowlink.md</button>
+        <button class="mdtab" data-k="invoice"  role="tab"><span class="dot"></span>invoice.md</button>
+        <button class="mdtab" data-k="pay"      role="tab"><span class="dot"></span>pay.md</button>
+        <button class="mdtab" data-k="compliance" role="tab"><span class="dot"></span>compliance.md</button>
+        <button class="mdtab" data-k="receipt"  role="tab"><span class="dot"></span>receipt.md</button>
+        <button class="mdtab" data-k="reputation" role="tab"><span class="dot"></span>reputation.md</button>
+      </div>
+
+      <div class="mdbody">
+        <aside class="mdtree" aria-label="file tree">
+          <div class="tlabel">flowlink.ink/</div>
+          <div><span class="tline">├─</span> <span class="tdir">.well-known/</span></div>
+          <div><span class="tline">│&nbsp;&nbsp;└─</span> <span class="tfile is-active" data-k="manifest">flowlink.md</span></div>
+          <div><span class="tline">├─</span> <span class="tdir">skills/</span></div>
+          <div><span class="tline">│&nbsp;&nbsp;├─</span> <span class="tfile" data-k="invoice">invoice.md</span></div>
+          <div><span class="tline">│&nbsp;&nbsp;├─</span> <span class="tfile" data-k="pay">pay.md</span></div>
+          <div><span class="tline">│&nbsp;&nbsp;├─</span> <span class="tfile" data-k="compliance">compliance.md</span></div>
+          <div><span class="tline">│&nbsp;&nbsp;├─</span> <span class="tfile" data-k="receipt">receipt.md</span></div>
+          <div><span class="tline">│&nbsp;&nbsp;└─</span> <span class="tfile" data-k="reputation">reputation.md</span></div>
+          <div><span class="tline">└─</span> <span class="tdir">schemas/</span></div>
+          <div><span class="tline">&nbsp;&nbsp;&nbsp;└─</span> <span class="tfile">proof.json</span></div>
+          <div style="margin-top:14px" class="tlabel">Network</div>
+          <div style="color:#9ec4c0">HashKey Chain</div>
+          <div style="color:#5f8a85;font-size:10.5px">Chain ID · 133</div>
+        </aside>
+
+        <div class="mdview" id="mdview">
+          <!-- populated by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT: agent terminal -->
+    <section class="agentpanel" aria-label="Agent execution">
+      <div class="agenthead">
+        <span class="agentdot" aria-hidden="true"></span>
+        <div class="agenttitle">agent.py · autonomous run</div>
+        <div class="agentsub" id="agentstatus">IDLE</div>
+      </div>
+
+      <div class="agentlog" id="agentlog">
+        <div class="logline on"><span class="arrow">$</span><div class="body muted">Click <b style="color:var(--teal-700)">Run Agent</b> to watch an AI agent discover FlowLink, read a skill, and settle a compliant transaction — end to end.</div></div>
+      </div>
+
+      <div class="agentfoot">
+        <button class="runbtn" id="runbtn" type="button">
+          <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M3 2.5v11a.5.5 0 0 0 .77.42l9-5.5a.5.5 0 0 0 0-.84l-9-5.5A.5.5 0 0 0 3 2.5z"/></svg>
+          Run Agent
+        </button>
+        <div class="foothint">Every call: <b>OFAC · KYC · Travel Rule</b> · PDF receipt · reputation update</div>
+      </div>
+    </section>
+  </div>
+
+  <!-- pills -->
+  <div class="pills">
+    <div class="pill">
+      <div class="ico" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4v5c0 5-3.5 8.5-8 9-4.5-.5-8-4-8-9V7l8-4z"/><path d="M9 12l2 2 4-4"/></svg>
+      </div>
+      <div>
+        <h4>Instant Compliance</h4>
+        <p>Every skill enforces <b>OFAC screening, KYC, and Travel Rule</b> at call time — not as an afterthought.</p>
+      </div>
+    </div>
+    <div class="pill">
+      <div class="ico" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h8l4 4v14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M15 3v4h4"/><path d="M9 13h6M9 17h4"/></svg>
+      </div>
+      <div>
+        <h4>Auditable Receipts</h4>
+        <p>Each transaction emits a <b>regulator-grade PDF</b> plus on-chain ProofLink hash. CFOs and auditors can verify.</p>
+      </div>
+    </div>
+    <div class="pill">
+      <div class="ico" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15 9 22 9 16.5 13.5 18.5 21 12 17 5.5 21 7.5 13.5 2 9 9 9"/></svg>
+      </div>
+      <div>
+        <h4>Portable Reputation</h4>
+        <p>Every compliant settlement builds the agent's <b>Reputation Score</b> — a trust signal portable across DeFi and TradFi.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="cornertag">SKILLS · MARKDOWN · MCP-READY</div>
+</main>
+
+<script>
+/* -----------------------------------------------------------
+   Skills content. Rendered as faux-markdown in the dark panel.
+   Each skill is a real-looking agent-consumable spec.
+   ----------------------------------------------------------- */
+const SKILLS = {
+  manifest: {
+    path: "/.well-known/flowlink.md",
+    body: `<h1 class="md">FlowLink</h1>
+<p class="md">The Payment Layer for the Agent Economy. Agent-native. Compliance-first. Built on HashKey Chain (ID&nbsp;133).</p>
+
+<h2 class="md">Skills</h2>
+<ul class="md">
+<li><a class="link" data-k="invoice">invoice</a> — issue a compliant crypto invoice</li>
+<li><a class="link" data-k="pay">pay</a> — settle any invoice in a stablecoin, one call</li>
+<li><a class="link" data-k="compliance">compliance</a> — OFAC · KYC · Travel Rule check</li>
+<li><a class="link" data-k="receipt">receipt</a> — regulator-grade PDF + on-chain proof</li>
+<li><a class="link" data-k="reputation">reputation</a> — portable agent trust score</li>
+</ul>
+
+<h2 class="md">Endpoint</h2>
+<pre class="md"><span class="cm"># agents call skills via plain HTTPS — no SDK</span>
+<span class="kw">base_url</span>:   <span class="str">"https://api.flowlink.ink/v1"</span>
+<span class="kw">discovery</span>:  <span class="str">"https://flowlink.ink/.well-known/flowlink.md"</span>
+<span class="kw">settlement</span>: <span class="str">"HashKey Chain · id=133"</span></pre>
+
+<h2 class="md">Contract</h2>
+<p class="md">Every skill returns a <code class="inline">ProofLink</code>. No ProofLink means the transaction did not clear compliance.</p>`
+  },
+
+  invoice: {
+    path: "/skills/invoice.md",
+    body: `<h1 class="md">skill · invoice</h1>
+<p class="md">Issue a cross-border crypto invoice with a one-click payment link. Counterparty data is validated at creation time.</p>
+
+<h2 class="md">Call</h2>
+<pre class="md"><span class="kw">invoice.create</span>({
+  <span class="kw">to</span>: <span class="str">"vendor.hk"</span>,       <span class="cm">// ENS / HashKey name / address</span>
+  <span class="kw">amount</span>: <span class="str">1200</span>,
+  <span class="kw">currency</span>: <span class="str">"USDC"</span>,
+  <span class="kw">purpose</span>: <span class="str">"Q3 compliance audit"</span>,
+  <span class="kw">due</span>: <span class="str">"2026-05-15"</span>
+})</pre>
+
+<h2 class="md">Returns</h2>
+<ul class="md">
+<li><code class="inline">invoice_id</code> — stable UUID</li>
+<li><code class="inline">pay_url</code> — single-link payment page (human or agent)</li>
+<li><code class="inline">prooflink_draft</code> — pre-compliance manifest</li>
+</ul>`
+  },
+
+  pay: {
+    path: "/skills/pay.md",
+    body: `<h1 class="md">skill · pay</h1>
+<p class="md">Settle an invoice (or an arbitrary intent) in a stablecoin. Gasless UX. Compliance is inlined — the call will fail before funds move if screens don't pass.</p>
+
+<h2 class="md">Call</h2>
+<pre class="md"><span class="kw">pay.execute</span>({
+  <span class="kw">invoice_id</span>: <span class="str">"inv_01J8Q..."</span>,
+  <span class="kw">from</span>: <span class="str">"agent.flowlink.eth"</span>,
+  <span class="kw">currency</span>: <span class="str">"USDC"</span>,
+  <span class="kw">compliance_context</span>: {
+    <span class="kw">purpose</span>: <span class="str">"vendor services"</span>,
+    <span class="kw">region</span>:  <span class="str">"HK→DE"</span>
+  }
+})</pre>
+
+<h2 class="md">Guarantees</h2>
+<ul class="md">
+<li>Settlement on <b>HashKey Chain</b> (id 133)</li>
+<li>ProofLink emitted atomically with the settle tx</li>
+<li>Failed compliance → <code class="inline">error.compliance</code>, no funds moved</li>
+</ul>`
+  },
+
+  compliance: {
+    path: "/skills/compliance.md",
+    body: `<h1 class="md">skill · compliance</h1>
+<p class="md">Standalone compliance check. Call it before <code class="inline">pay</code> if you want to preflight without committing.</p>
+
+<h2 class="md">Checks</h2>
+<ul class="md">
+<li><b>OFAC / Sanctions</b> — real-time screening of both parties</li>
+<li><b>KYC</b> — resolved at the network layer via HashKey HSP mandates</li>
+<li><b>Travel Rule</b> — counterparty data packaged with the tx payload</li>
+<li><b>MiCA / FATF</b> — jurisdiction-aware rule set</li>
+</ul>
+
+<h2 class="md">Call</h2>
+<pre class="md"><span class="kw">compliance.check</span>({
+  <span class="kw">from</span>: <span class="str">"agent.flowlink.eth"</span>,
+  <span class="kw">to</span>: <span class="str">"vendor.hk"</span>,
+  <span class="kw">amount</span>: <span class="str">1200</span>,
+  <span class="kw">currency</span>: <span class="str">"USDC"</span>
+})</pre>
+
+<p class="md"><span class="cm">// returns { pass: true, ofac: "clear", kyc: "verified", travel_rule: "packaged" }</span></p>`
+  },
+
+  receipt: {
+    path: "/skills/receipt.md",
+    body: `<h1 class="md">skill · receipt</h1>
+<p class="md">Emit a regulator-grade PDF plus on-chain ProofLink hash. Acceptable by CFOs, auditors, visa officers, and tax authorities.</p>
+
+<h2 class="md">Call</h2>
+<pre class="md"><span class="kw">receipt.issue</span>({
+  <span class="kw">prooflink</span>: <span class="str">"prooflink://0xabc...ef01"</span>,
+  <span class="kw">format</span>:    <span class="str">"pdf"</span>,
+  <span class="kw">locale</span>:    <span class="str">"en-DE"</span>
+})</pre>
+
+<h2 class="md">Contents</h2>
+<ul class="md">
+<li>Transaction hash + block height (HashKey Chain)</li>
+<li>Compliance attestation line (OFAC · KYC · Travel Rule)</li>
+<li>Counterparty KYC status, jurisdictions, purpose of payment</li>
+<li>ProofLink QR — any third party can re-verify on-chain</li>
+</ul>`
+  },
+
+  reputation: {
+    path: "/skills/reputation.md",
+    body: `<h1 class="md">skill · reputation</h1>
+<p class="md">Query or push updates to an agent's portable Reputation Score. Built from the chain of ProofLinks — no self-reporting.</p>
+
+<h2 class="md">Call</h2>
+<pre class="md"><span class="kw">reputation.get</span>({
+  <span class="kw">subject</span>: <span class="str">"agent.flowlink.eth"</span>
+})
+<span class="cm">// → { score: 94, volume_usd: 82400, on_time: 0.99, disputes: 0 }</span></pre>
+
+<h2 class="md">Why it matters</h2>
+<ul class="md">
+<li>Agent-to-agent commerce needs a trust signal no single party controls</li>
+<li>DeFi can accept the score as <b>soft collateral</b></li>
+<li>TradFi can accept the score as <b>proof of financial behavior</b> — unlock visas, loans, housing</li>
+</ul>`
+  }
+};
+
+/* --- tabs & tree wiring --- */
+const view = document.getElementById("mdview");
+function renderSkill(k){
+  const s = SKILLS[k] || SKILLS.manifest;
+  view.innerHTML = `<div class="mdpath"><span class="httpget">GET</span>https://flowlink.ink${s.path}</div>` + s.body;
+  document.querySelectorAll(".mdtab").forEach(b => b.classList.toggle("active", b.dataset.k === k));
+  document.querySelectorAll(".mdtree .tfile").forEach(el => {
+    el.classList.toggle("is-active", el.dataset.k === k);
+  });
+  view.scrollTop = 0;
+  // in-body skill links
+  view.querySelectorAll("a.link[data-k]").forEach(a => {
+    a.addEventListener("click", e => { e.preventDefault(); renderSkill(a.dataset.k); });
+    a.style.cursor = "pointer";
+  });
+}
+document.querySelectorAll(".mdtab").forEach(b => b.addEventListener("click", () => renderSkill(b.dataset.k)));
+document.querySelectorAll(".mdtree .tfile[data-k]").forEach(el => el.addEventListener("click", () => renderSkill(el.dataset.k)));
+renderSkill("manifest");
+
+/* --- agent run animation --- */
+const log   = document.getElementById("agentlog");
+const btn   = document.getElementById("runbtn");
+const stat  = document.getElementById("agentstatus");
+
+const SCRIPT = [
+  { cls:"", arrow:"$", html:`<span class="muted"># agent boot — discovering flowlink</span>` },
+  { cls:"", arrow:"→", html:`<span class="tag get">GET</span>/.well-known/<b>flowlink.md</b> <span class="muted">→ 5 skills found</span>` },
+  { cls:"", arrow:"→", html:`<span class="tag get">GET</span>/skills/<b>pay.md</b> <span class="muted">→ spec loaded, compliance inlined</span>` },
+  { cls:"", arrow:"→", html:`<span class="tag call">CALL</span><b>pay.execute</b>{ to:"vendor.hk", amount:1200, currency:"USDC" }` },
+  { cls:"", arrow:"·", html:`<span class="tag chk">CHECK</span>screening <b>OFAC</b> · <b>KYC</b> · <b>Travel Rule</b>…` },
+
+  { cls:"ok", arrow:"✓", html:`<div class="proof">
+      <div class="row"><span class="check">✓</span> <b>OFAC</b> clear · <b>KYC</b> verified (HashKey) · <b>Travel Rule</b> packaged</div>
+      <div class="row"><span class="check">✓</span> Settled on-chain · <b>USDC 1,200</b></div>
+      <div class="chain">tx 0xabc1…ef01 · prooflink://0xabc1…ef01 · block 18,402,913</div>
+    </div>` },
+
+  { cls:"", arrow:"→", html:`<span class="tag call">CALL</span><b>receipt.issue</b> <span class="muted">→ receipt.pdf ready · auditor- and visa-grade</span>` },
+  { cls:"", arrow:"→", html:`<span class="tag call">CALL</span><b>reputation.get</b> <span class="muted">→ score</span> <b>94</b> · on-time 0.99 · $82.4k · <b style="color:var(--green-600)">+1</b>` },
+  { cls:"ok", arrow:"★", html:`<b style="color:var(--teal-700)">Done.</b> 1 manifest + 3 skills · on-chain settlement · 0 SDKs · full compliance trail.` }
+];
+
+let running = false;
+async function runAgent(){
+  if(running) return;
+  running = true;
+  btn.disabled = true; btn.style.opacity=.7;
+  stat.textContent = "RUNNING";
+  stat.style.color = "var(--green-600)";
+  log.innerHTML = "";
+  for (const step of SCRIPT){
+    const d = document.createElement("div");
+    d.className = "logline " + step.cls;
+    d.innerHTML = `<span class="arrow">${step.arrow}</span><div class="body">${step.html}</div>`;
+    log.appendChild(d);
+    // force layout then fade in
+    requestAnimationFrame(()=> d.classList.add("on"));
+    log.scrollTop = log.scrollHeight;
+    const delay = step.cls === "ok" && step.html.includes("proof") ? 700
+                : step.cls === "ok" ? 420
+                : step.arrow === "·" ? 360
+                : 300;
+    await new Promise(r => setTimeout(r, delay));
+  }
+  stat.textContent = "DONE";
+  stat.style.color = "var(--teal-700)";
+  btn.disabled = false; btn.style.opacity = 1;
+  running = false;
+}
+btn.addEventListener("click", runAgent);
+
+/* auto-run once on load for screenshot-ready state */
+window.addEventListener("load", () => {
+  setTimeout(runAgent, 600);
+});
+</script>
+</body>
+</html>

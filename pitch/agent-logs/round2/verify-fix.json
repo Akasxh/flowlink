@@ -1,0 +1,16 @@
+{
+  "agent_id": "round2-verify-fix",
+  "fix_verified": true,
+  "assertions_passed": 10,
+  "assertions_failed": 0,
+  "tool_calls": 4,
+  "bytes_fetched": 6128,
+  "details": {
+    "sanctions_response_status": 403,
+    "sanctions_response_content_type": "application/problem+json",
+    "sanctions_response_has_agent_action": true,
+    "sanctions_response_has_problem_json_fields": ["type","title","status","code","instance","request_id","agent_action"],
+    "clean_address_response_status": 503
+  },
+  "regressions_found": []
+}

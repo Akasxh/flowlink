@@ -1,0 +1,38 @@
+{
+  "scenario": "playwright",
+  "agent_id": "playwright-1",
+  "task": "site navigation to find payment flow",
+  "tool_calls": 7,
+  "estimated_context_tokens": 4200,
+  "final_state": "success",
+  "what_worked": [
+    "Landing page at http://localhost:3000 rendered an agent-targeted index listing five skills (invoice, pay, compliance, receipt, reputation), each linking to a markdown spec — so navigation alone surfaced the API surface",
+    "Clicking /skills/pay.md returned the full contract: POST /v1/pay with Authorization Bearer + Idempotency-Key headers, request body {invoice_id, payer_address, token}, 202 Accepted with transaction_id/checkout_url/hsp_mandate_id/events_url, plus an SSE stream at /v1/transactions/{id}/events emitting compliance_passed, mandate_created, settled, receipt_ready",
+    "Clicking /skills/invoice.md gave the invoice lifecycle: POST /v1/invoices to create, GET /v1/invoices/{id}, DELETE /v1/invoices/{id} for cancel (only while status==pending); statuses = pending | paying | paid | expired | cancelled",
+    "Navigating to /.well-known/flowlink.md gave the auth story end-to-end: SIWE nonce at POST /v1/auth/siwe/nonce, sign, verify at POST /v1/auth/siwe/verify to get a JWT with scopes [invoice:write, pay:execute, ...]; alternative dev/test API keys (flk_test_...) minted at /dashboard/keys",
+    "Identified the full error catalogue on the pay skill page: auth_required(401), token_expired(401), insufficient_scope(403), invoice_not_found(404), invoice_already_paid(409), invoice_expired(410), compliance_blocked_sanctions(403), compliance_blocked_velocity(429), compliance_upstream_unavailable(503), idempotency_conflict(409), rate_limited(429), invalid_token(400), chain_id_mismatch(400), hsp_upstream_error(502). All returned as application/problem+json with a code and agent_action field. A fuller list lives at /skills/errors.md",
+    "Snapshot (accessibility tree) returned markdown content inline in a single generic element — I never needed to fetch raw text; the rendered HTML already contained the full spec"
+  ],
+  "what_failed": [
+    "Landing-page console showed ~10 client-side errors (likely missing assets or hydration noise). None blocked navigation, so I did not investigate",
+    "I did not verify the API is actually live at localhost:3000 — the skills reference https://flowlink.ink/v1/* and all curl examples hit that production host, not localhost. A real agent would need to decide whether localhost proxies that host or whether to rewrite the base URL. No explicit guidance on this ambiguity",
+    "Snapshot-only exploration meant I could not inspect payload schemas beyond what the markdown prose included (e.g. exact receipt JSON shape lives in /skills/receipt.md which I did not open)"
+  ],
+  "context_observations": "Low ambiguity, high signal. The site is explicitly designed for agents: the landing page's hero says 'Markdown is the API' and the first three links are /llms.txt, /.well-known/flowlink.md, and /.well-known/mcp.json. Three navigations (landing -> pay.md -> invoice.md -> flowlink.md well-known) were enough to answer the human's question completely. The hardest part was resisting the urge to open every skill — the task ('how agents pay invoices') was fully covered by pay.md and the well-known quickstart. Snapshot format compressed markdown well under 2KB per page. Total path to answer: ~4 operations. Pattern is highly discoverable compared to a traditional REST API where I'd need OpenAPI or source code.",
+  "log": [
+    {"step": 1, "tool": "browser_navigate", "args": "http://localhost:3000", "result_size": "~1.5KB snapshot", "notes": "Landing: 'Markdown is the API.' Five skills listed. 9-10 console errors ignored."},
+    {"step": 2, "tool": "browser_snapshot", "args": "(current page)", "result_size": "~1.8KB yaml", "notes": "Confirmed links to /skills/*.md, /llms.txt, /.well-known/flowlink.md, /.well-known/mcp.json."},
+    {"step": 3, "tool": "browser_click", "args": "ref=e27 (/skills/pay.md link)", "result_size": "nav ack", "notes": "Navigated via click as instructed (no direct curl)."},
+    {"step": 4, "tool": "browser_snapshot", "args": "(pay.md)", "result_size": "~3.8KB yaml", "notes": "Full POST /v1/pay contract: body, 202 response, SSE events, 14-row error table, Problem+JSON shape, bash copy-paste."},
+    {"step": 5, "tool": "browser_navigate", "args": "http://localhost:3000/skills/invoice.md", "result_size": "nav ack", "notes": "Direct navigate — I had the URL from the landing page."},
+    {"step": 6, "tool": "browser_snapshot", "args": "(invoice.md)", "result_size": "~2.2KB yaml", "notes": "create_invoice / get_invoice / cancel_invoice; status enum; 7-row error table."},
+    {"step": 7, "tool": "browser_navigate+snapshot", "args": "http://localhost:3000/.well-known/flowlink.md", "result_size": "~2.8KB yaml", "notes": "SIWE auth flow (nonce -> verify -> JWT with scopes) + fallback API keys. Happy-path: create invoice -> pay -> SSE -> fetch receipt."}
+  ],
+  "answer_to_human": {
+    "auth": "Wallet-based Sign-In-With-Ethereum (SIWE): POST /v1/auth/siwe/nonce with address, sign the returned message, POST /v1/auth/siwe/verify with message+signature, receive JWT (scopes invoice:write, pay:execute, invoice:read; 3600s expiry). Dev/test fallback: API key flk_test_... minted at /dashboard/keys.",
+    "create_invoice": "POST /v1/invoices with Authorization: Bearer <jwt>, Idempotency-Key: <uuid>, body {receiver_address, amount, token in USDC|USDT|HSK, purpose?, due_at?}. Returns 201 with invoice_id (e.g. inv_01HV9Z...). Receiver is OFAC-screened before creation.",
+    "pay_invoice": "POST /v1/pay with Authorization + Idempotency-Key, body {invoice_id, payer_address, token}. Returns 202 {transaction_id, status:mandate_created, checkout_url, hsp_mandate_id, compliance:{score,sanctions_ok}, events_url, expected_settlement_sec:30}. Subscribe to SSE at /v1/transactions/{id}/events for compliance_passed, mandate_created, settled(tx_hash,block), receipt_ready. Then GET /v1/receipts/{id} for the ed25519-signed receipt.",
+    "key_error_codes": "compliance_blocked_sanctions (403, do not retry, escalate), compliance_blocked_velocity (429, respect retry_after), compliance_upstream_unavailable (503, fail-closed, backoff), invoice_already_paid (409, call receipt.get), chain_id_mismatch (400, switch to chain 133), idempotency_conflict (409, fresh key or resend identical body), rate_limited (429, no parallel retry), hsp_upstream_error (502, backoff 1->2->4s max 3). All responses are application/problem+json with code + agent_action fields.",
+    "chain": "HashKey Chain testnet, chain id 133, settled via HashKey Settlement Protocol (HSP) Single-Pay Mandate."
+  }
+}

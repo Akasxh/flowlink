@@ -1,0 +1,10 @@
+{
+  "agent_id": "round4-keys",
+  "tool_calls": 8,
+  "pem_is_valid_ed25519": true,
+  "jwks_is_valid": true,
+  "jwks_kid": "flk-jwt-2026-04",
+  "receipt_kid_prefix": "flk-receipt-YYYY-MM",
+  "kid_collision_resolved": true,
+  "notes": "PEM at /.well-known/flowlink-receipt-pubkey.pem parses via openssl pkey as ED25519 Public-Key with 32-byte raw key (c7:e5:94:5d:3d:18:92:38:c8:4f:ce:08:36:0d:2a:8b:d9:05:78:db:97:33:b6:68:90:56:92:91:3c:9f:4e:20). JWKS at /.well-known/jwks.json is valid JSON with keys[0] = {kty:OKP, crv:Ed25519, kid:flk-jwt-2026-04, use:sig, alg:EdDSA, x (43-char base64url)}. Receipt doc /skills/receipt.md uses key_id pattern 'flk-receipt-2026-04' in its example signature block and does NOT reference flk-jwt-*. Namespace separation is effective: JWT signing keys use the 'flk-jwt-' prefix (exposed via JWKS) while receipt-signing keys use the 'flk-receipt-' prefix (exposed via PEM). Collision resolved at prefix level. Minor gap: the receipt doc does not explicitly call out the JWT key as a separate entity — the distinction is implicit through disjoint kid prefixes and separate distribution endpoints, not documented prose. Note: the PEM endpoint serves the receipt key, while JWKS serves the JWT key; these are two distinct ed25519 keypairs as evidenced by different base64 encodings (PEM pub: x+WUXT0Y..., JWKS x: l5aeD0Sc...)."
+}

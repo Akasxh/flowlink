@@ -1,0 +1,62 @@
+{
+  "scenario": "enabled",
+  "agent_id": "enabled-1",
+  "task": "happy path — discover then attempt auth-gated call",
+  "tool_calls": 5,
+  "bytes_fetched_total": 8512,
+  "final_state": "partial",
+  "what_worked": [
+    "llms.txt at root gave a clear map of skill files, auth model, and conventions in one shot",
+    "flowlink.md agent quickstart spelled out the full invoice→pay→receipt flow with copy-pasteable curl",
+    "compliance.md declared auth: [siwe, api-key, none] so no auth dance was needed for the preflight",
+    "POST /v1/compliance/check accepted the request and returned structured Problem+JSON (not a 404 or HTML)",
+    "unauth POST /v1/invoices returned exactly the documented auth_required code with an agent_action field pointing back at /.well-known/flowlink.md"
+  ],
+  "what_failed": [
+    "compliance check itself returned 503 compliance_upstream_unavailable (fail-closed, OFAC upstream timed out) — expected per docs, but means the preflight did not yield a score",
+    "could not actually score the requested address; agent would need to retry with backoff per agent_action"
+  ],
+  "context_observations": "Discovery was cheap: three markdown files (llms.txt 1.6KB, flowlink.md 3.4KB, compliance.md 2.7KB = ~7.7KB) were enough to construct both POSTs correctly on the first try. The agent_action field on every error made the next step unambiguous without re-reading skill docs.",
+  "log": [
+    {
+      "step": 1,
+      "tool": "Bash",
+      "cmd": "curl -s http://localhost:3000/llms.txt",
+      "status": 200,
+      "bytes": 1612,
+      "notes": "Root discovery doc. Lists 5 skills, auth options (SIWE or API key bearer), RFC 9457 Problem+JSON error shape, idempotency requirement, and link to errors catalogue."
+    },
+    {
+      "step": 2,
+      "tool": "Bash",
+      "cmd": "curl -s http://localhost:3000/.well-known/flowlink.md",
+      "status": 200,
+      "bytes": 3420,
+      "notes": "Agent quickstart with full invoice→pay→receipt curl example. Confirms every /v1/* call needs Authorization: Bearer and every write needs Idempotency-Key. Fail-closed OFAC noted."
+    },
+    {
+      "step": 3,
+      "tool": "Bash",
+      "cmd": "curl -s http://localhost:3000/skills/compliance.md",
+      "status": 200,
+      "bytes": 2698,
+      "notes": "Compliance skill spec. Frontmatter auth: [siwe, api-key, none] confirms /v1/compliance/check is a public preflight. Documents 200 clear / 403 sanctioned / 503 upstream responses and score thresholds."
+    },
+    {
+      "step": 4,
+      "tool": "Bash",
+      "cmd": "curl -s -X POST http://localhost:3000/v1/compliance/check -H 'Content-Type: application/json' -d '{\"address\":\"0x742d35Cc6634C0532925a3b844Bc9e7595f8beA0\"}'",
+      "status": 503,
+      "bytes": 453,
+      "notes": "compliance_upstream_unavailable — OFAC check timed out, fail-closed by design. Response is valid Problem+JSON with agent_action = 'Backoff and retry.' Endpoint reachable, no auth needed, request shape accepted."
+    },
+    {
+      "step": 5,
+      "tool": "Bash",
+      "cmd": "curl -s -X POST http://localhost:3000/v1/invoices -H 'Content-Type: application/json' -H 'Idempotency-Key: agent-enabled-1-noauth' -d '{\"amount\":\"0.01\",\"token\":\"USDC\",\"receiver_address\":\"0x742d35Cc6634C0532925a3b844Bc9e7595f8beA0\",\"purpose\":\"test-noauth\"}'",
+      "status": 401,
+      "bytes": 329,
+      "notes": "auth_required: title 'Authentication required', code 'auth_required', agent_action 'Provide Authorization: Bearer <token>. See /.well-known/flowlink.md for SIWE flow.' Clean 401 with pointer back to the auth doc."
+    }
+  ]
+}

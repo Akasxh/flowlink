@@ -1,0 +1,14 @@
+{
+  "agent_id": "round5-final",
+  "curl_agent_exit_code": 1,
+  "p0_siwe_fix_holds": true,
+  "p1_compliance_problem_json_holds": true,
+  "p2_jwks_namespaced": true,
+  "p2_llms_txt_honest": true,
+  "total_bugs_caught_across_5_rounds": 4,
+  "bugs_remaining": [
+    "curl-agent.sh test #9 is stale: it expects HTTP 200 with sanctions_ok=false on the Tornado Cash address, but the round-3 P1 fix now (correctly) returns HTTP 403 application/problem+json with code=compliance_blocked_sanctions. The server behavior is right (fails closed, sanctions_source=fallback); the smoke test needs updating to assert the problem+json contract instead of the old sanctions_ok=false JSON shape."
+  ],
+  "final_state": "ready",
+  "recommendation": "Ship the server as-is; update tests/curl-agent.sh step 9 to validate status=403, content-type=application/problem+json, and body.code=compliance_blocked_sanctions so the smoke suite aligns with the corrected round-3 contract."
+}

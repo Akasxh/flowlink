@@ -93,14 +93,19 @@ fi
 # ─────────────────────────────────────────────────────────────────────
 step "9. OFAC fallback list catches Tornado Cash address"
 # Tornado Cash address from the hardcoded fallback list
-RESP=$(curl -s -o /tmp/flowlink-test-sdn.json -w '%{http_code}' \
+RESP=$(curl -s -o /tmp/flowlink-test-sdn.json -D /tmp/flowlink-test-sdn.hdr -w '%{http_code}' \
   -X POST "$BASE_URL/v1/compliance/check" \
   -H 'Content-Type: application/json' \
   -d '{"address":"0x8589427373D6D84E98730D7795D8f6f8731FDA16"}')
 [[ "$RESP" == "403" ]] || fail "expected 403 (sanctioned), got $RESP"
-SANCTIONS_OK=$(jq -r .sanctions_ok /tmp/flowlink-test-sdn.json)
-[[ "$SANCTIONS_OK" == "false" ]] || fail "expected sanctions_ok=false"
-ok "fallback OFAC list blocks Tornado Cash address"
+# After the round-2 agent catch, 403 must be RFC 9457 Problem+JSON, not a custom body
+CT=$(grep -i '^content-type:' /tmp/flowlink-test-sdn.hdr | tr -d '\r\n' | awk '{print tolower($2)}')
+[[ "$CT" == *"application/problem+json"* ]] || fail "expected content-type application/problem+json, got '$CT'"
+CODE=$(jq -r .code /tmp/flowlink-test-sdn.json)
+[[ "$CODE" == "compliance_blocked_sanctions" ]] || fail "expected code compliance_blocked_sanctions, got $CODE"
+ACTION=$(jq -r .agent_action /tmp/flowlink-test-sdn.json)
+[[ -n "$ACTION" ]] || fail "agent_action missing from Problem+JSON"
+ok "fallback OFAC list blocks Tornado Cash address (Problem+JSON shape verified)"
 
 # ─────────────────────────────────────────────────────────────────────
 step "all smoke checks passed"

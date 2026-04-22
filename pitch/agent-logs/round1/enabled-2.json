@@ -1,0 +1,32 @@
+{
+  "scenario": "enabled",
+  "agent_id": "enabled-2",
+  "task": "capability mapping",
+  "tool_calls": 7,
+  "bytes_fetched_total": 20198,
+  "final_state": "success",
+  "capabilities_found": ["invoice", "pay", "compliance", "receipt", "reputation"],
+  "error_codes_found": 24,
+  "what_worked": [
+    "llms.txt is a true entry point: linked to every skill file and the errors catalogue with absolute URLs",
+    "Frontmatter on each skill file exposes auth, scopes, stability, idempotency, and related_skills in a machine-parseable header",
+    "errors.md is a single source of truth with 24 distinct error codes grouped by category (auth, validation, not-found, conflict, compliance, rate, upstream, internal) plus a retry cheat-sheet",
+    "Every error includes an agent_action field stating the correct recovery (retry, stop, refresh, etc.)",
+    "Per-skill error tables cross-reference the global catalogue, so per-endpoint context is not lost",
+    "Parallel curl of the 5 skills + errors.md completed in one dispatch after reading llms.txt"
+  ],
+  "what_failed": [
+    "Did not need to fetch /.well-known/flowlink.md, openapi.yaml, or mcp.json to answer the boss question - the 5 skill docs + errors.md were fully self-describing. Those would be needed for actual SIWE or tool wiring, not capability mapping.",
+    "reputation skill is marked stability=beta with score weights subject to change before v1.1 - this is the single dimension of documented ambiguity"
+  ],
+  "context_observations": "Complete map in 7 curl calls and ~20KB. Single most useful file was errors.md - it enumerates all 24 error codes in one place with HTTP status, code string, and agent_action for every one, eliminating the need to aggregate tables across skill docs. llms.txt was the second most useful: 1.6KB that indexed every downstream file with absolute URLs. Skills surface: invoice (create/get/cancel), pay (pay_invoice + SSE wait_for_settlement), compliance (check_sanctions + batch_check), receipt (get_receipt by receipt_id/transaction_id/invoice_id + ed25519 verification), reputation (get_reputation, beta). Error codes counted across auth(4), validation(4), not-found(4), conflict(4), compliance(3), rate(1), upstream(3), internal(1) = 24. No ambiguity on the stable surface; reputation beta is the lone caveat. Discovery-driven agents get a clean one-pager here.",
+  "log": [
+    {"step": 1, "cmd": "curl http://localhost:3000/llms.txt", "status": 200, "bytes": 1612, "notes": "Root index. Lists 5 skills, 3 well-known files, error catalogue URL, auth methods, conventions."},
+    {"step": 2, "cmd": "curl http://localhost:3000/skills/invoice.md", "status": 200, "bytes": 2434, "notes": "create_invoice, get_invoice, cancel_invoice. 7 local error codes. auth=siwe|api-key, scopes=invoice:read/write."},
+    {"step": 3, "cmd": "curl http://localhost:3000/skills/pay.md", "status": 200, "bytes": 5001, "notes": "pay_invoice + SSE wait_for_settlement with events compliance_passed/mandate_created/settled/receipt_ready. 14 error codes table. rate_limit=20/min/key."},
+    {"step": 4, "cmd": "curl http://localhost:3000/skills/compliance.md", "status": 200, "bytes": 2698, "notes": "check_sanctions, batch_check (<=20). Fail-closed semantics. Score 0-100 with pay minimum 60. 3 error codes local."},
+    {"step": 5, "cmd": "curl http://localhost:3000/skills/receipt.md", "status": 200, "bytes": 2690, "notes": "get_receipt by receipt_id/transaction_id/invoice_id. ed25519 signing. Verification pseudocode included. Key rotation via /.well-known/flowlink-receipt-pubkey.pem. 3 error codes."},
+    {"step": 6, "cmd": "curl http://localhost:3000/skills/reputation.md", "status": 200, "bytes": 2089, "notes": "get_reputation (no auth). Beta stability - score weights subject to change. Facts (tx_count, volume_usd, first_seen) stable. 3 error codes."},
+    {"step": 7, "cmd": "curl http://localhost:3000/skills/errors.md", "status": 200, "bytes": 3674, "notes": "Authoritative catalogue. 24 distinct codes across 8 categories. RFC 9457 problem+json schema. Retry cheat-sheet. Every entry has agent_action text."}
+  ]
+}

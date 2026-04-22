@@ -1,0 +1,10 @@
+{
+  "agent_id": "round3-race",
+  "total_requests": 15,
+  "tool_calls": 12,
+  "all_sanctions_responses_identical": true,
+  "rate_limit_hits": 0,
+  "unexpected_500s": 5,
+  "nonces_unique": false,
+  "notes": "Compliance burst (10 parallel POSTs via xargs -P 10) was flawless: all 10 returned HTTP 403 with identical code='compliance_blocked_sanctions', sanctions_source='fallback', score=0, and byte-identical bodies modulo the per-request request_id ULID. Zero 429s (rate limiter honors 60/min/IP budget comfortably). Zero 500s on the compliance path. However, the SIWE nonce endpoint /v1/auth/siwe/nonce is fundamentally broken: every POST (single or parallel, checksummed or lowercase address, valid or malformed) returns HTTP 500 with detail='invalid message: max line number was 6\\nInvalid message: {success:false,state:103,...}'. The error signature shows the server's nonce-issue route is incorrectly dispatching the input body into the SIWE MESSAGE PARSER used by the /verify endpoint (expecting a 6+ line EIP-4361 message, not a {address} JSON). All 5 parallel nonce calls produced NO nonces, so uniqueness is trivially false. Reproduced 3x with different address formats including the checksummed example directly from /.well-known/flowlink.md. This blocks the entire auth flow and should be treated as a P0 regression in nonce route wiring. The validation layer (empty body -> 400 validation_error) works correctly, so the bug is downstream of schema validation — likely a handler swap or a copy-paste error importing the verifyMessage handler into the nonce path."
+}
