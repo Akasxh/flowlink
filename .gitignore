@@ -28,6 +28,7 @@ prisma/prisma/
 # Logs + diagnostics
 logs
 *.log
+!pitch/*.log
 npm-debug.log*
 pids
 *.pid

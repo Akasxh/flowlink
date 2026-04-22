@@ -1,0 +1,77 @@
+
+──────────────────────────────────────────────────────────────────────────────
+▶ Phase 1 · Discovery — agent reads the website
+──────────────────────────────────────────────────────────────────────────────
+  GET  /llms.txt                                  200   1638B 70ms  req=-
+    → 41 lines of index; agent finds 6 skills + mcp manifest
+
+  GET  /skills/invoice.md                         200   2434B 8ms  req=-
+  GET  /skills/pay.md                             200   5001B 6ms  req=-
+  GET  /skills/errors.md                          200   3772B 5ms  req=-
+    → 3 skill files fetched, ~11KB total
+
+──────────────────────────────────────────────────────────────────────────────
+▶ Phase 2 · SIWE auth
+──────────────────────────────────────────────────────────────────────────────
+  generated test wallet:  0xE5349bd4fd98E6885B651e0D6355f6A5B98B0031
+  POST /v1/auth/siwe/nonce                        200    453B 3600ms  req=req_01KPVCGEKWA9F588QW5HA9F588
+  got nonce=ZQLoUHwuDxZcOLZJx expires_in=300s chain_id=133
+  signed EIP-4361 message (sig 0x3c0eff9228fdd5cb…)
+  POST /v1/auth/siwe/verify                       200    796B 499ms  req=req_01KPVCGF192FF2A30HS02FF2A3
+  got JWT, scopes=invoice:read,invoice:write,pay:execute,receipt:read,compliance:check,reputation:read  subject=cmoaha0z60…
+
+──────────────────────────────────────────────────────────────────────────────
+▶ Phase 3 · Compliance check on the wallet
+──────────────────────────────────────────────────────────────────────────────
+  POST /v1/compliance/check                       200    271B 209ms  req=req_01KPVCGFB2P1SGBVAQVGP1SGBV
+  sanctions_ok=true  score=100  source=ofac-api,velocity-24h
+
+──────────────────────────────────────────────────────────────────────────────
+▶ Phase 4 · Compliance — Tornado Cash address (expect 403)
+──────────────────────────────────────────────────────────────────────────────
+  POST /v1/compliance/check                       403    438B 14ms  req=req_01KPVCGFC69VD3F50P609VD3F5
+  status=403  code=compliance_blocked_sanctions  action="Stop. Do NOT retry. Escalate to a human."
+
+──────────────────────────────────────────────────────────────────────────────
+▶ Phase 5 · Create an invoice
+──────────────────────────────────────────────────────────────────────────────
+  receiver wallet: 0xE3d925906E8a4e839348776B2A10491d7DD69d48
+  POST /v1/invoices                               201    364B 279ms  req=req_01KPVCGFK3441DFEFKVB441DFE
+  ✓ created invoice_id=inv_01KPVCGFMKWNY4DC116KWNY4DC  status=pending  flowlink_id=flowlink:inv/inv_01KPVCGFMKWNY4DC116KWNY4DC
+
+──────────────────────────────────────────────────────────────────────────────
+▶ Phase 6 · Read the invoice back
+──────────────────────────────────────────────────────────────────────────────
+  GET  /v1/invoices/inv_01KPVCGFMKWNY4DC116KWNY4DC 200    379B 650ms  req=req_01KPVCGG86YXYC0T9D2SYXYC0T
+  status=pending  amount=10.00 USDC  due_at=2026-05-22T20:01:09.779Z
+
+──────────────────────────────────────────────────────────────────────────────
+▶ Phase 7 · Idempotency proof — replay same POST with same key
+──────────────────────────────────────────────────────────────────────────────
+  POST /v1/invoices                               201    364B 26ms  req=req_01KPVCGG9Y6Q97B0P4YY6Q97B0
+  replayed=true  invoice_id=inv_01KPVCGFMKWNY4DC116KWNY4DC  (matches? true)
+
+──────────────────────────────────────────────────────────────────────────────
+▶ Phase 8 · Pay the invoice
+──────────────────────────────────────────────────────────────────────────────
+  POST /v1/pay                                    202    391B 261ms  req=req_01KPVCGGGFD6GK5C10PQD6GK5C
+  status=202
+    transaction_id=txn_01KPVCGGHYTHTA8Q9QGRTHTA8Q
+    hsp_configured=false  status=compliance_passed
+    compliance score=100  ok=true
+
+──────────────────────────────────────────────────────────────────────────────
+▶ Phase 9 · Read transaction state
+──────────────────────────────────────────────────────────────────────────────
+  GET  /v1/transactions/txn_01KPVCGGHYTHTA8Q9QGRTHTA8Q 200    639B 642ms  req=req_01KPVCGH51QS90VJEP23QS90VJ
+  status=compliance_passed  events=1
+    2026-04-22T20:01:10.724Z  compliance_passed  {"score":100}
+
+──────────────────────────────────────────────────────────────────────────────
+▶ Demo complete
+──────────────────────────────────────────────────────────────────────────────
+  http calls:  13
+  bytes fetched total: 16,940
+  wall clock: 6.4s
+
+  full log saved to: /home/akash/PROJECTS/flowlink/pitch/demo-live-run.log
