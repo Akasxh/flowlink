@@ -4,12 +4,20 @@ Marketing + agent-testing evidence for FlowLink.
 
 | File | What |
 |---|---|
+| `live-duel.html` | **NEW** — investor-grade side-by-side replay of two real Claude agents racing through the same task. Reads `/agent-logs/live/*.json` and animates each agent's *reasoning* (italic thought bubbles) + their tool calls. Press Replay. |
+| `live-duel.png` | Full-page screenshot of the duel in its final state — A SETTLED, B BLOCKED. |
+| `agent-logs/live/{enabled-A,baseline-B}.json` | The transcripts the duel page replays — captured during a real session. |
+| `v0.2-preview.html` | 5-slide UX preview of v0.2 features (SSE, MCP, OpenAPI, dashboard, observability) — built before the code was written. |
+| `v0.2-preview.png` | Full-page screenshot of the preview. |
 | `index.html` | Original "Markdown is the API" 16:9 pitch slide. Animated agent-terminal. |
-| `comparison.html` | Side-by-side replay: agent WITH vs WITHOUT `/skills/*.md`. Real numbers from 22 agent probes. |
-| `comparison.png` | Full-page screenshot of the comparison slides (stacked). |
+| `comparison.html` | Earlier side-by-side comparison. Lighter than `live-duel.html` — kept for reference. |
+| `comparison.png` | Screenshot of the earlier comparison. |
 | `agent-native-slide.png` | Rendered agent-native pitch slide. |
 | `flowlink-pitch-deck.pdf` | Full pitch deck. |
-| `agent-logs/round{1..5}/*.json` | 22 real Claude agent transcripts — tool calls, bytes, observations. Including the 4 bug-finds that became commits. |
+| `landing.png` | Live screenshot of the agent-native landing page. |
+| `demo-live-run.log` | End-to-end demo agent transcript (SIWE → invoice → pay → receipt) from `scripts/demo-agent.mjs`. |
+| `agent-logs/round{1..5}/*.json` | 22 real Claude agent transcripts from earlier rounds — tool calls, observations, the 4 bug-finds that became commits. |
+| `agent-logs/v0.2/*.md` | One implementation summary per v0.2 feature agent. |
 
 ## Viewing the slides
 

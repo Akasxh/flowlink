@@ -1,0 +1,163 @@
+{
+  "agent": "baseline",
+  "agent_label": "Agent B · Playwright browser only (no skills)",
+  "task": "discover FlowLink, create + pay an invoice for 10 USDC",
+  "started_at": "2026-04-23T01:09:54Z",
+  "ended_at": "2026-04-23T01:11:40Z",
+  "tool": "playwright-browser",
+  "constraints": "no curl, no fetch from page; must NOT visit /llms.txt, /skills/*, /.well-known/*",
+  "steps": [
+    {
+      "n": 1,
+      "thinking": "Standard play — navigate to the homepage and see what's actually rendered. A fresh agent has zero context; the landing page is the only legal entry point.",
+      "action": "browser_navigate http://localhost:3000",
+      "tool_call": "mcp__playwright__browser_navigate({url:'http://localhost:3000'})",
+      "result_status": 200,
+      "result_summary": "React/Next.js landing page rendered; title 'FlowLink — Agent-Native Payments'; 9-10 console errors but page loaded; tagline 'Markdown is the API.'",
+      "next_decision": "Take an accessibility snapshot to enumerate every clickable element and link — I need to know if there's any form, login, or wallet-connect button hidden in the DOM."
+    },
+    {
+      "n": 2,
+      "thinking": "Snapshot will reveal the actual interactive surface. I'm hoping to find a 'Pay Invoice' button, a wallet-connect modal trigger, or a hidden link to a dashboard.",
+      "action": "browser_snapshot",
+      "tool_call": "mcp__playwright__browser_snapshot()",
+      "result_status": 200,
+      "result_summary": "ENTIRELY agent-targeted. Every link points to forbidden URLs: /llms.txt, /.well-known/flowlink.md, /.well-known/mcp.json, plus 5 skill files (/skills/invoice.md, /skills/pay.md, /skills/compliance.md, /skills/receipt.md, /skills/reputation.md). One outbound github link. ZERO forms, ZERO buttons, ZERO inputs, no wallet-connect, no login. The page is essentially a directory listing for agents.",
+      "next_decision": "All advertised paths are forbidden to me. Pivot to speculative human-oriented URL paths the way a fresh agent would: /login, /signup, /dashboard, /app — maybe there's a hidden human-facing UI."
+    },
+    {
+      "n": 3,
+      "thinking": "Most SaaS sites have a /login route even if they're API-first. Try it.",
+      "action": "browser_navigate http://localhost:3000/login",
+      "tool_call": "mcp__playwright__browser_navigate({url:'http://localhost:3000/login'})",
+      "result_status": 404,
+      "result_summary": "Hard 404 — 'This page could not be found.' Next.js default 404 page. No login UI.",
+      "next_decision": "Try /dashboard — some apps gate at /dashboard and redirect to login if unauthenticated."
+    },
+    {
+      "n": 4,
+      "thinking": "If FlowLink had any human-facing operator console, it would likely live at /dashboard.",
+      "action": "browser_navigate http://localhost:3000/dashboard",
+      "tool_call": "mcp__playwright__browser_navigate({url:'http://localhost:3000/dashboard'})",
+      "result_status": 200,
+      "result_summary": "URL stayed at /dashboard but page rendered the SAME landing page (title 'FlowLink — Agent-Native Payments'). Looks like the Next.js app router has a catch-all that falls back to the homepage for some unmatched paths but returns 404 for others. Either way, no dashboard exists.",
+      "next_decision": "Try /signup — maybe accounts can be self-served without login first."
+    },
+    {
+      "n": 5,
+      "thinking": "Self-serve signup is the other half of /login. If neither exists, this site genuinely has no human auth.",
+      "action": "browser_navigate http://localhost:3000/signup",
+      "tool_call": "mcp__playwright__browser_navigate({url:'http://localhost:3000/signup'})",
+      "result_status": 404,
+      "result_summary": "404. No signup UI.",
+      "next_decision": "Try /app — the conventional SPA entry point."
+    },
+    {
+      "n": 6,
+      "thinking": "/app is a common alias for the authenticated SPA. Worth one ping.",
+      "action": "browser_navigate http://localhost:3000/app",
+      "tool_call": "mcp__playwright__browser_navigate({url:'http://localhost:3000/app'})",
+      "result_status": 404,
+      "result_summary": "404. No SPA app shell.",
+      "next_decision": "Try /pay — a one-off pay page would be the lightest possible UI for a payments product."
+    },
+    {
+      "n": 7,
+      "thinking": "Stripe-style /pay/{id} pages exist on many products. Let me probe the bare /pay first.",
+      "action": "browser_navigate http://localhost:3000/pay",
+      "tool_call": "mcp__playwright__browser_navigate({url:'http://localhost:3000/pay'})",
+      "result_status": 404,
+      "result_summary": "404. No /pay page.",
+      "next_decision": "Try /invoice."
+    },
+    {
+      "n": 8,
+      "thinking": "Bare /invoice as a hub or form would be the most natural place to start an invoice flow.",
+      "action": "browser_navigate http://localhost:3000/invoice",
+      "tool_call": "mcp__playwright__browser_navigate({url:'http://localhost:3000/invoice'})",
+      "result_status": 404,
+      "result_summary": "404. No /invoice page.",
+      "next_decision": "Try /docs — if there's no app, maybe there's at least human-readable docs that explain the flow."
+    },
+    {
+      "n": 9,
+      "thinking": "The docs might tell a human how to drive the API by hand, even if there's no UI.",
+      "action": "browser_navigate http://localhost:3000/docs",
+      "tool_call": "mcp__playwright__browser_navigate({url:'http://localhost:3000/docs'})",
+      "result_status": 404,
+      "result_summary": "404. No /docs.",
+      "next_decision": "Try /api/docs — some setups namespace docs under /api."
+    },
+    {
+      "n": 10,
+      "thinking": "Try /api/docs as a last gasp before swagger.",
+      "action": "browser_navigate http://localhost:3000/api/docs",
+      "tool_call": "mcp__playwright__browser_navigate({url:'http://localhost:3000/api/docs'})",
+      "result_status": 404,
+      "result_summary": "404.",
+      "next_decision": "Try /swagger — swagger-ui auto-mounted is common."
+    },
+    {
+      "n": 11,
+      "thinking": "Swagger UI is often left at /swagger by default.",
+      "action": "browser_navigate http://localhost:3000/swagger",
+      "tool_call": "mcp__playwright__browser_navigate({url:'http://localhost:3000/swagger'})",
+      "result_status": 404,
+      "result_summary": "404. No swagger.",
+      "next_decision": "Try a speculative /pay/invoice/{id} path as the task hints suggest — maybe per-invoice pay pages exist even without a hub."
+    },
+    {
+      "n": 12,
+      "thinking": "Maybe individual invoice pay pages exist at a templated path. Try a synthetic id.",
+      "action": "browser_navigate http://localhost:3000/pay/invoice/test",
+      "tool_call": "mcp__playwright__browser_navigate({url:'http://localhost:3000/pay/invoice/test'})",
+      "result_status": 404,
+      "result_summary": "404. No templated pay-page route.",
+      "next_decision": "Try /invoices/new — the canonical Rails-style 'create new invoice' route."
+    },
+    {
+      "n": 13,
+      "thinking": "Last conventional human-CRUD URL pattern to probe.",
+      "action": "browser_navigate http://localhost:3000/invoices/new",
+      "tool_call": "mcp__playwright__browser_navigate({url:'http://localhost:3000/invoices/new'})",
+      "result_status": 404,
+      "result_summary": "404.",
+      "next_decision": "Go back to homepage and use browser_evaluate to inspect the DOM (head, meta, link tags, data-* attributes, all <a> hrefs, scripts) for any auth hints, hidden routes, or alternate-API surfaces I missed."
+    },
+    {
+      "n": 14,
+      "thinking": "Return to the home page so DOM inspection runs against a known-good document, not the 404 page.",
+      "action": "browser_navigate http://localhost:3000/",
+      "tool_call": "mcp__playwright__browser_navigate({url:'http://localhost:3000/'})",
+      "result_status": 200,
+      "result_summary": "Back on homepage.",
+      "next_decision": "Run DOM inspection via browser_evaluate — NOT a network fetch, just a read of the already-loaded document object. This is allowed; I'm not making HTTP requests, just reading what the browser already painted."
+    },
+    {
+      "n": 15,
+      "thinking": "Inspect the DOM directly. I want to see: meta tags (auth hints?), <link rel> headers (alternate API surfaces?), data-* attributes (hidden state?), all anchor hrefs, and inline scripts. This may surface something the snapshot abstracted away.",
+      "action": "browser_evaluate — enumerate metas, links, data-* attrs, all <a> hrefs, scripts",
+      "tool_call": "mcp__playwright__browser_evaluate({function: '() => { ... read meta/links/data-attrs/anchors/scripts ... }'})",
+      "result_status": 200,
+      "result_summary": "Confirmed the agent-native posture is total. Meta description: 'Compliance-first payment layer for the agent economy. Markdown is the API. No SDK.' Crucial discovery in <link rel> tags: rel='alternate' type='text/markdown' → /.well-known/flowlink.md; rel='alternate' type='application/json' → /.well-known/mcp.json; rel='describedby' → /llms.txt; rel='alternate' type='application/yaml' → https://flowlink.ink/.well-known/openapi.yaml. The site advertises FOUR distinct agent-discovery surfaces (llms.txt, MCP manifest, flowlink.md, openapi.yaml) — ALL of which are on my forbidden list (the openapi.yaml lives under /.well-known/ on the production domain). The 9 anchor hrefs are exactly: /llms.txt, /.well-known/flowlink.md, /.well-known/mcp.json, /skills/{invoice,pay,compliance,receipt,reputation}.md, plus the github source link. ZERO data-* hints beyond a Next.js precedence marker. ZERO inline scripts contain auth tokens or hidden routes (just Next.js runtime).",
+      "next_decision": "I've now exhausted what a browser-only agent can reasonably do. Try /api and /api/invoice as one final probe — maybe a JSON endpoint will at least return a 405 with allowed methods or a hint structure."
+    },
+    {
+      "n": 16,
+      "thinking": "Probe /api root and /api/invoice. Even a 405 'POST required' or a JSON error envelope would be useful intelligence.",
+      "action": "browser_navigate http://localhost:3000/api then /api/invoice then /api/invoices",
+      "tool_call": "mcp__playwright__browser_navigate({url:'http://localhost:3000/api/invoices'})",
+      "result_status": 404,
+      "result_summary": "All three (/api, /api/invoice, /api/invoices) returned the Next.js 404 HTML page. No JSON 405 or method-allowed hint — either the actual API endpoints sit elsewhere (probably described in the openapi.yaml or skill files I cannot read), or they require POST and the GET-from-browser falls through to the not-found handler. Either way, I cannot proceed.",
+      "next_decision": "Stop. Write the report. I have hit the 16-tool-call ceiling and definitively established that there is no browser-renderable path to invoice creation or payment."
+    }
+  ],
+  "outcome": "blocked",
+  "outcome_summary": "FlowLink exposes ZERO human/browser UI for invoice creation or payment; every advertised entry point is an agent-discovery file (/llms.txt, /.well-known/flowlink.md, /.well-known/mcp.json, /skills/*.md, openapi.yaml) and all of those paths are explicitly on my forbidden list, so I could not produce an invoice_id or transaction_id.",
+  "metrics": {
+    "tool_calls": 16,
+    "bytes_fetched_total_estimate": 180000,
+    "wall_clock_sec": 106
+  },
+  "final_artifact": "No invoice_id, no transaction_id. The site is fully agent-native: there is no /login, /signup, /dashboard, /app, /pay, /invoice, /docs, /api/docs, /swagger, /pay/invoice/{id}, /invoices/new, /api, /api/invoice, or /api/invoices route that renders an interactive UI. The homepage explicitly advertises 'Markdown is the API. No SDK' and links to four agent-discovery manifests (/llms.txt, /.well-known/flowlink.md, /.well-known/mcp.json, /.well-known/openapi.yaml) plus five skill files (/skills/{invoice,pay,compliance,receipt,reputation}.md) — ALL of which were explicitly forbidden by the task constraints. A browser-only agent that cannot read the agent-native surface has no path to completing this task. The cost of the agent-unfriendly forbidden-list constraint is total: I went from 'I know the surface exists, I can see it advertised in <link rel> tags' to 'I cannot reach it' with no fallback. A real agent that could read /llms.txt or /skills/pay.md would have completed this in roughly 2 calls; a browser-only agent with the agent surface blacklisted completed 0% of the task in 16 calls."
+}
