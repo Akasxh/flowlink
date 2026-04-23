@@ -3,493 +3,381 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>FlowLink · Live Duel — agent-with vs agent-without</title>
+<title>FlowLink · Live Duel</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --teal-900:#063a3a; --teal-800:#0a4f4f; --teal-700:#0c6363; --teal-600:#0d7a7a;
-    --teal-500:#158b8b; --teal-400:#1da0a0; --teal-300:#3fc4c4; --teal-200:#bce5e5;
-    --green-700:#1e6e42; --green-600:#217a49; --green-500:#2a9056; --green-400:#3ba867;
-    --coral-700:#a93547; --coral-600:#c14358; --coral-500:#d05968; --coral-400:#e08490; --coral-200:#f4cdd2;
-    --amber-500:#e0a23b; --amber-300:#f6c663;
-    --mint-50:#f3faf7; --mint-100:#e8f3ee; --mint-200:#d1e7dc;
-    --rose-50:#fdf6f6; --rose-100:#fbe8eb; --rose-200:#f3cdd2;
-    --ink-950:#06151c; --ink-900:#0f1b22; --ink-700:#1a2733; --ink-500:#4a5a66; --ink-400:#6b7a85; --ink-300:#9aa9b2; --ink-200:#c6d0d7;
-    --paper:#ffffff; --paper-warm:#fbfaf7; --paper-cool:#f6fafa;
+    --bg:#fafbfa;
+    --paper:#ffffff;
+    --line:#e6ebe9;
+    --line-2:#d8dfdc;
+    --ink:#0e1c20;
+    --ink-2:#3d4d54;
+    --ink-3:#7a8a91;
+    --ink-4:#aab6bb;
+    --good:#0c6363;
+    --good-soft:#e6f1f0;
+    --bad:#a93547;
+    --bad-soft:#fbeef0;
+    --terminal:#0e2424;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{
-    background:#f3f7f5;
-    font-family:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-    color:var(--ink-700);min-height:100%;-webkit-font-smoothing:antialiased;font-feature-settings:"ss01","cv11";
+    background:var(--bg);
+    font-family:"Inter",ui-sans-serif,system-ui,-apple-system,sans-serif;
+    color:var(--ink-2);min-height:100%;-webkit-font-smoothing:antialiased;
+    overflow-y:auto;overflow-x:hidden;
   }
-  body{
-    display:flex;flex-direction:column;align-items:center;gap:36px;padding:32px 24px;
-    background:
-      radial-gradient(1400px 700px at 8% -10%,#dbeee8 0,transparent 60%),
-      radial-gradient(1100px 550px at 100% 110%,#dde9e1 0,transparent 60%),
-      #f3f7f5;
+  body{padding:24px;display:flex;flex-direction:column;gap:18px;align-items:center}
+
+  .page{
+    width:100%;max-width:1480px;display:flex;flex-direction:column;gap:18px;
   }
 
-  /* page wrapper — bigger than 16:9 to fit reasoning panes */
-  .stage{
-    width:100%;max-width:1680px;display:flex;flex-direction:column;gap:24px;
+  /* slim header */
+  .head{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 4px;
   }
-
-  /* nav */
-  .nav{
-    display:flex;align-items:center;justify-content:space-between;gap:24px;
-    background:var(--paper);border-radius:18px;padding:16px 24px;
-    box-shadow:0 1px 0 rgba(12,99,99,.06),0 12px 32px -16px rgba(10,79,79,.18);
-  }
-  .brand{display:flex;align-items:center;gap:12px}
+  .brand{display:flex;align-items:center;gap:10px}
   .brand-mark{
-    width:34px;height:34px;border-radius:10px;position:relative;
-    background:radial-gradient(120% 120% at 30% 20%,#1fb3a3 0%,#0d7a7a 55%,#083f3f 100%);
-    box-shadow:inset 0 0 0 1px rgba(255,255,255,.18),0 8px 20px -8px rgba(13,122,122,.6);
+    width:26px;height:26px;border-radius:7px;
+    background:linear-gradient(135deg,#1da0a0,#0c6363);
   }
-  .brand-mark::before,.brand-mark::after{content:"";position:absolute;inset:6px;border-radius:50%;border:2.5px solid transparent;}
-  .brand-mark::before{border-top-color:#2fc4c4;border-right-color:#2fc4c4;transform:rotate(20deg)}
-  .brand-mark::after{border-bottom-color:#3ba867;border-left-color:#3ba867;transform:rotate(20deg)}
-  .brand-word{font-weight:800;font-size:20px;letter-spacing:-.01em;color:var(--teal-800)}
-  .navmeta{display:flex;align-items:center;gap:14px;font:500 12px/1 "JetBrains Mono",monospace;color:var(--ink-400);letter-spacing:.04em}
-  .navmeta .live-pill{
-    display:inline-flex;align-items:center;gap:6px;background:var(--mint-100);color:var(--green-700);
-    padding:5px 10px;border-radius:999px;font-weight:700;font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+  .brand-word{font:700 16px/1 Inter;color:var(--ink);letter-spacing:-.01em}
+  .head-meta{
+    font:500 11px/1 "JetBrains Mono",monospace;color:var(--ink-3);
+    display:flex;align-items:center;gap:14px;letter-spacing:.04em;
   }
-  .navmeta .live-pill .dot{width:6px;height:6px;border-radius:50%;background:var(--green-500);box-shadow:0 0 0 3px rgba(42,144,86,.22);animation:pulse 1.6s infinite ease-in-out}
-  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+  .head-meta .live{
+    display:inline-flex;align-items:center;gap:6px;color:var(--good);
+    font-weight:700;font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+  }
+  .head-meta .live::before{
+    content:"";width:6px;height:6px;border-radius:50%;background:var(--good);
+    animation:pulse 1.6s infinite;
+  }
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
-  /* hero */
+  /* hero — compact */
   .hero{
-    background:var(--paper);border-radius:24px;padding:56px 72px 48px;
-    box-shadow:0 1px 0 rgba(12,99,99,.06),0 24px 64px -28px rgba(10,79,79,.25);
-    display:grid;grid-template-columns:1.4fr 1fr;gap:64px;align-items:end;
+    background:var(--paper);border:1px solid var(--line);border-radius:16px;
+    padding:28px 32px;display:flex;align-items:center;justify-content:space-between;gap:32px;
   }
-  .eyebrow{font:700 11px/1 "JetBrains Mono",monospace;color:var(--teal-700);letter-spacing:.18em;text-transform:uppercase;margin-bottom:18px;display:inline-flex;align-items:center;gap:10px}
-  .eyebrow .swatch{width:8px;height:8px;border-radius:2px;background:var(--teal-500)}
-  h1{
-    font:800 clamp(40px,4.4vw,68px)/1.02 "Inter",sans-serif;letter-spacing:-.025em;color:var(--ink-950);
+  .hero-l{flex:1;display:flex;flex-direction:column;gap:6px}
+  .hero h1{
+    font:700 32px/1.15 Inter;color:var(--ink);letter-spacing:-.02em;
   }
-  h1 .quiet{color:var(--ink-300);font-weight:600}
-  h1 .a{color:var(--teal-700)}
-  h1 .b{color:var(--coral-600)}
-  h1 .vs{font:italic 600 .65em/1 "Instrument Serif",serif;color:var(--ink-400);margin:0 .15em;letter-spacing:.02em}
-  .lede{
-    color:var(--ink-500);font-size:17px;line-height:1.55;max-width:46ch;margin-top:8px;
+  .hero h1 .good{color:var(--good)}
+  .hero h1 .bad{color:var(--bad)}
+  .hero p{font:400 14px/1.5 Inter;color:var(--ink-3);max-width:64ch}
+  .hero p code{
+    font-family:"JetBrains Mono",monospace;background:var(--good-soft);color:var(--good);
+    padding:1px 5px;border-radius:4px;font-size:.92em;
   }
-  .lede b{color:var(--ink-700);font-weight:600}
-  .lede code{font-family:"JetBrains Mono",monospace;background:var(--mint-100);color:var(--teal-700);padding:1px 6px;border-radius:5px;font-size:.93em}
-
-  .hero-cta{display:flex;flex-direction:column;gap:14px;align-items:flex-end}
   .runbtn{
-    appearance:none;border:0;cursor:pointer;
-    background:linear-gradient(180deg,var(--teal-500),var(--teal-700));
-    color:#fff;font:700 14px/1 "Inter";letter-spacing:.01em;
-    padding:16px 26px;border-radius:14px;display:inline-flex;align-items:center;gap:11px;
-    box-shadow:0 8px 28px -8px rgba(13,122,122,.6),inset 0 0 0 1px rgba(255,255,255,.15);
-    transition:transform .12s,box-shadow .12s;
+    appearance:none;border:0;cursor:pointer;flex:none;
+    background:var(--good);color:#fff;font:600 13px/1 Inter;
+    padding:14px 22px;border-radius:10px;display:inline-flex;align-items:center;gap:9px;
+    transition:opacity .15s,transform .12s;
   }
-  .runbtn:hover{transform:translateY(-1px);box-shadow:0 12px 32px -10px rgba(13,122,122,.7)}
-  .runbtn:active{transform:translateY(0)}
-  .runbtn:disabled{opacity:.55;cursor:default;transform:none}
-  .runbtn svg{width:13px;height:13px}
-  .source-line{font:500 11px/1.5 "JetBrains Mono",monospace;color:var(--ink-400);text-align:right;max-width:34ch}
-  .source-line b{color:var(--teal-700);font-weight:700}
+  .runbtn:hover{opacity:.92;transform:translateY(-1px)}
+  .runbtn:disabled{opacity:.45;cursor:default;transform:none}
+  .runbtn svg{width:11px;height:11px}
 
-  /* duel — main panels */
+  /* duel: two big panels side by side */
   .duel{
-    display:grid;grid-template-columns:1fr 8px 1fr;gap:0;align-items:stretch;
+    display:grid;grid-template-columns:1fr 1fr;gap:18px;
   }
   .panel{
-    background:var(--paper);border-radius:24px;overflow:hidden;
-    box-shadow:0 1px 0 rgba(12,99,99,.06),0 24px 64px -28px rgba(10,79,79,.18);
-    display:grid;grid-template-rows:auto auto auto 1fr auto;min-height:0;
+    background:var(--paper);border:1px solid var(--line);border-radius:16px;
+    overflow:hidden;display:flex;flex-direction:column;
   }
-  .panel-A{border-top:5px solid var(--teal-500)}
-  .panel-B{border-top:5px solid var(--coral-500)}
-  .divider{width:8px;background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
-  .divider .vstxt{font:italic 700 14px/1 "Instrument Serif",serif;color:var(--ink-300);letter-spacing:.03em;rotate:90deg;white-space:nowrap}
-
   .panel-head{
-    padding:20px 26px 14px;display:flex;align-items:center;gap:12px;
+    padding:18px 22px;border-bottom:1px solid var(--line);
+    display:flex;align-items:center;gap:12px;
   }
   .pill{
-    padding:5px 11px;border-radius:999px;font:700 10.5px/1 "JetBrains Mono",monospace;
-    letter-spacing:.14em;text-transform:uppercase;
+    font:600 10px/1 "JetBrains Mono",monospace;letter-spacing:.14em;text-transform:uppercase;
+    padding:5px 9px;border-radius:5px;
   }
-  .pill-A{background:var(--mint-100);color:var(--teal-700)}
-  .pill-B{background:var(--rose-100);color:var(--coral-700)}
-  .panel-title{font:800 18px/1.2 "Inter";color:var(--ink-900);letter-spacing:-.01em;flex:1}
-  .panel-title .sub{display:block;font:500 12px/1.3 "Inter";color:var(--ink-400);margin-top:4px}
-  .stat-dot{
-    width:11px;height:11px;border-radius:50%;background:var(--ink-200);transition:background .25s,box-shadow .25s;
+  .pill.good{background:var(--good-soft);color:var(--good)}
+  .pill.bad{background:var(--bad-soft);color:var(--bad)}
+  .panel-title{font:700 14px/1.2 Inter;color:var(--ink);flex:1}
+  .panel-title .sub{
+    display:block;font:400 11px/1.3 "JetBrains Mono",monospace;
+    color:var(--ink-3);margin-top:3px;letter-spacing:.02em;
   }
-  .stat-dot.idle{background:var(--ink-300)}
-  .stat-dot.running{background:var(--amber-500);box-shadow:0 0 0 5px rgba(224,162,59,.18);animation:pulse 1.4s infinite ease-in-out}
-  .stat-dot.success{background:var(--green-500);box-shadow:0 0 0 5px rgba(42,144,86,.2)}
-  .stat-dot.blocked{background:var(--coral-500);box-shadow:0 0 0 5px rgba(208,89,104,.2)}
+  .status{
+    width:8px;height:8px;border-radius:50%;background:var(--ink-4);transition:background .25s;
+  }
+  .status.run{background:#d4a13a;animation:pulse 1.4s infinite}
+  .status.win{background:var(--good)}
+  .status.lose{background:var(--bad)}
 
-  /* live counters strip */
-  .counters{
-    display:grid;grid-template-columns:repeat(4,1fr);gap:0;padding:6px 26px 18px;
+  /* metrics row */
+  .metrics{
+    display:grid;grid-template-columns:repeat(3,1fr);
+    border-bottom:1px solid var(--line);
   }
-  .counter{display:flex;flex-direction:column;gap:3px}
-  .counter .label{font:700 9.5px/1 "JetBrains Mono",monospace;color:var(--ink-300);letter-spacing:.14em;text-transform:uppercase}
-  .counter .val{font:800 22px/1.05 "Inter";color:var(--ink-900);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
-  .counter .sub{font:500 10px/1 "JetBrains Mono",monospace;color:var(--ink-400)}
+  .metric{padding:14px 22px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:2px}
+  .metric:last-child{border-right:0}
+  .metric .k{font:600 9.5px/1 "JetBrains Mono",monospace;color:var(--ink-3);letter-spacing:.12em;text-transform:uppercase}
+  .metric .v{font:700 22px/1 Inter;color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
 
-  /* progress thread */
-  .thread{padding:6px 26px 0;display:flex;align-items:center;gap:6px}
-  .thread .dot{width:7px;height:7px;border-radius:50%;background:var(--ink-200);flex:none;transition:background .3s,transform .3s}
-  .thread .dot.done{background:var(--teal-400)}
-  .panel-B .thread .dot.done{background:var(--coral-400)}
-  .thread .dot.now{transform:scale(1.6);background:var(--amber-500);box-shadow:0 0 0 4px rgba(224,162,59,.18)}
-  .thread .grow{flex:1;height:1px;background:var(--mint-200)}
-  .panel-B .thread .grow{background:var(--rose-200)}
+  /* progress dots */
+  .progress{padding:12px 22px;display:flex;align-items:center;gap:4px;border-bottom:1px solid var(--line)}
+  .progress .dot{width:6px;height:6px;border-radius:50%;background:var(--line-2);flex:none;transition:background .25s,transform .25s}
+  .panel.A .progress .dot.done{background:var(--good)}
+  .panel.B .progress .dot.done{background:var(--bad)}
+  .progress .dot.now{transform:scale(1.5);background:#d4a13a}
+  .progress .grow{flex:1;height:1px;background:var(--line)}
 
-  /* main reasoning + action area */
-  .reason-area{
-    padding:20px 26px 24px;display:flex;flex-direction:column;gap:14px;min-height:0;
+  /* reasoning + action */
+  .body{padding:18px 22px;display:flex;flex-direction:column;gap:12px;flex:1}
+  .think{
+    background:var(--bg);border:1px solid var(--line);border-radius:10px;
+    padding:14px 16px;display:flex;flex-direction:column;gap:6px;min-height:108px;
   }
-  .reason-card{
-    background:var(--paper-cool);border:1px solid var(--mint-200);border-radius:14px;
-    padding:18px 20px;display:flex;flex-direction:column;gap:8px;min-height:144px;
-    transition:opacity .25s,transform .25s;
-  }
-  .panel-B .reason-card{background:var(--paper-warm);border-color:var(--rose-200)}
-  .reason-label{
-    font:700 10px/1 "JetBrains Mono",monospace;color:var(--teal-700);letter-spacing:.14em;text-transform:uppercase;
+  .think .head-row{
     display:flex;align-items:center;gap:8px;
+    font:600 9.5px/1 "JetBrains Mono",monospace;color:var(--ink-3);letter-spacing:.12em;text-transform:uppercase;
   }
-  .panel-B .reason-label{color:var(--coral-700)}
-  .reason-label .num{
-    background:var(--mint-100);color:var(--teal-700);padding:2px 7px;border-radius:5px;font-size:10px;
+  .think .head-row .num{
+    background:var(--paper);border:1px solid var(--line);
+    padding:2px 6px;border-radius:4px;color:var(--ink-2);font-size:9.5px;
   }
-  .panel-B .reason-label .num{background:var(--rose-100);color:var(--coral-700)}
-  .reason-text{
-    font:italic 500 16px/1.5 "Instrument Serif",serif;color:var(--ink-700);font-style:italic;
-    letter-spacing:-.005em;
+  .think .text{
+    font:400 14px/1.5 Inter;color:var(--ink);
   }
-  .reason-text.fade-in{animation:fadeIn .4s ease}
-  @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
-  .next-line{
-    font:500 12.5px/1.5 "Inter";color:var(--ink-400);padding-top:6px;border-top:1px dashed var(--mint-200);
-    display:flex;align-items:flex-start;gap:8px;
+  .think .text.fade{animation:fade .35s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+  .think .next{
+    font:400 12px/1.4 Inter;color:var(--ink-3);
+    padding-top:6px;border-top:1px dashed var(--line);
+    display:flex;gap:6px;
   }
-  .panel-B .next-line{border-top-color:var(--rose-200)}
-  .next-line .arrow{color:var(--teal-500);font-weight:700;flex:none}
-  .panel-B .next-line .arrow{color:var(--coral-500)}
+  .think .next b{color:var(--ink-2);font-weight:500}
 
-  /* action terminal */
-  .action-card{
-    background:linear-gradient(180deg,#0a3535,#062828);border-radius:14px;overflow:hidden;
-    box-shadow:0 12px 32px -16px rgba(6,40,40,.4);
-    display:grid;grid-template-rows:auto auto;min-height:130px;
+  .term{
+    background:var(--terminal);color:#cfe4e1;border-radius:10px;overflow:hidden;
+    font:500 11.5px/1.5 "JetBrains Mono",monospace;
   }
-  .panel-B .action-card{background:linear-gradient(180deg,#341a20,#22101418)}
-  .action-head{
-    padding:10px 16px;background:rgba(0,0,0,.25);border-bottom:1px solid rgba(255,255,255,.06);
-    display:flex;align-items:center;gap:10px;
+  .term .head{
+    padding:9px 14px;background:rgba(0,0,0,.22);
+    font:600 9.5px/1 "JetBrains Mono",monospace;color:rgba(255,255,255,.55);
+    letter-spacing:.12em;text-transform:uppercase;
   }
-  .action-head .at{font:700 9px/1 "JetBrains Mono",monospace;color:rgba(255,255,255,.5);letter-spacing:.14em;text-transform:uppercase}
-  .action-head .label{font:600 12px/1 "Inter";color:#fff}
-  .action-body{padding:13px 18px 16px;font:500 12px/1.55 "JetBrains Mono",monospace;color:#cfe4e1;display:flex;flex-direction:column;gap:6px}
-  .panel-B .action-body{color:#f0d6da}
-  .action-cmd{color:#7ce0e0;word-break:break-all}
-  .panel-B .action-cmd{color:#ffbec9}
-  .action-result{color:rgba(207,228,225,.75);font-size:11.5px;line-height:1.5}
-  .panel-B .action-result{color:rgba(240,214,218,.75)}
-  .action-result .stat{display:inline-block;padding:1px 7px;border-radius:4px;margin-right:6px;font-size:10.5px;font-weight:700;color:#fff}
-  .action-result .stat.s2{background:rgba(42,144,86,.55)}
-  .action-result .stat.s4{background:rgba(208,89,104,.55)}
-  .action-result .stat.s5{background:rgba(168,53,71,.65)}
+  .term .b{padding:12px 16px;display:flex;flex-direction:column;gap:6px}
+  .term .cmd{color:#7ce0e0;word-break:break-all}
+  .panel.B .term .cmd{color:#ffbec9}
+  .term .res{color:rgba(207,228,225,.78);font-size:11px}
+  .panel.B .term .res{color:rgba(240,214,218,.78)}
+  .term .res .stat{
+    display:inline-block;padding:1px 6px;border-radius:3px;margin-right:6px;
+    font-size:10px;font-weight:700;color:#fff;
+  }
+  .term .res .stat.s2{background:#21703f}
+  .term .res .stat.s4{background:#a93547}
 
-  /* outcome footer per panel */
-  .outcome-row{
-    padding:14px 26px 18px;display:flex;align-items:center;justify-content:space-between;
-    border-top:1px solid var(--mint-200);
+  /* outcome footer */
+  .foot{
+    padding:14px 22px;border-top:1px solid var(--line);
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
   }
-  .panel-B .outcome-row{border-top-color:var(--rose-200)}
   .outcome-tag{
-    font:800 12px/1 "Inter";letter-spacing:.06em;text-transform:uppercase;
-    padding:7px 12px;border-radius:8px;
+    font:700 11px/1 Inter;letter-spacing:.06em;text-transform:uppercase;
+    padding:6px 10px;border-radius:6px;
   }
-  .outcome-tag.pending{background:var(--mint-100);color:var(--ink-400)}
-  .outcome-tag.success{background:rgba(42,144,86,.16);color:var(--green-700)}
-  .outcome-tag.blocked{background:rgba(208,89,104,.18);color:var(--coral-700)}
-  .outcome-line{font:500 12px/1.45 "Inter";color:var(--ink-500);max-width:48ch;text-align:right}
+  .outcome-tag.pending{background:var(--bg);color:var(--ink-3);border:1px solid var(--line)}
+  .outcome-tag.win{background:var(--good-soft);color:var(--good)}
+  .outcome-tag.lose{background:var(--bad-soft);color:var(--bad)}
+  .foot .line{font:400 12px/1.4 Inter;color:var(--ink-3);text-align:right;max-width:50ch}
 
-  /* numbers callout */
+  /* numbers strip — single row */
   .numbers{
-    background:var(--paper);border-radius:24px;padding:40px 56px;
-    box-shadow:0 1px 0 rgba(12,99,99,.06),0 24px 64px -28px rgba(10,79,79,.2);
-    display:grid;grid-template-columns:repeat(4,1fr);gap:32px;
+    background:var(--paper);border:1px solid var(--line);border-radius:16px;
+    display:grid;grid-template-columns:repeat(4,1fr);
   }
-  .num-cell{display:flex;flex-direction:column;gap:8px;border-left:1px solid var(--mint-200);padding-left:24px}
-  .num-cell:first-child{border-left:0;padding-left:0}
-  .num-cell .label{font:700 11px/1 "JetBrains Mono",monospace;color:var(--ink-400);letter-spacing:.14em;text-transform:uppercase}
-  .num-cell .row{display:flex;align-items:baseline;gap:12px}
-  .num-cell .v-A{font:800 38px/1 "Inter";color:var(--teal-700);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
-  .num-cell .v-B{font:700 18px/1 "Inter";color:var(--coral-600);font-variant-numeric:tabular-nums;letter-spacing:-.01em;text-decoration:line-through;text-decoration-color:rgba(208,89,104,.45)}
-  .num-cell .delta{font:700 13px/1 "JetBrains Mono",monospace;color:var(--green-600);background:var(--mint-100);padding:4px 8px;border-radius:6px}
-  .num-cell .sub{font:500 12px/1.5 "Inter";color:var(--ink-500);margin-top:4px}
+  .ncell{
+    padding:18px 24px;border-right:1px solid var(--line);
+    display:flex;flex-direction:column;gap:6px;
+  }
+  .ncell:last-child{border-right:0}
+  .ncell .nk{font:600 10px/1 "JetBrains Mono",monospace;color:var(--ink-3);letter-spacing:.12em;text-transform:uppercase}
+  .ncell .nrow{display:flex;align-items:baseline;gap:10px}
+  .ncell .va{font:700 26px/1 Inter;color:var(--good);font-variant-numeric:tabular-nums;letter-spacing:-.015em}
+  .ncell .vb{font:600 14px/1 Inter;color:var(--bad);font-variant-numeric:tabular-nums;text-decoration:line-through;text-decoration-color:rgba(169,53,71,.4)}
+  .ncell .delta{font:600 11px/1 "JetBrains Mono",monospace;color:var(--good);background:var(--good-soft);padding:3px 7px;border-radius:4px}
 
-  /* takeaway */
-  .takeaway{
-    background:linear-gradient(135deg,#063737 0%,#0a4f4f 50%,#063737 100%);
-    color:#fff;border-radius:24px;padding:48px 64px;
-    box-shadow:0 24px 64px -28px rgba(6,55,55,.4);
-    display:grid;grid-template-columns:1.3fr 1fr;gap:56px;align-items:center;
+  /* quote — single line */
+  .quote-card{
+    background:var(--paper);border:1px solid var(--line);border-radius:16px;
+    padding:22px 32px;display:flex;align-items:center;gap:24px;justify-content:space-between;
   }
-  .takeaway .quote-mark{
-    font:700 80px/0.6 "Instrument Serif",serif;color:rgba(47,196,196,.55);height:24px;
+  .quote-card .q{
+    font:500 15px/1.5 Inter;color:var(--ink);max-width:80ch;
   }
-  .takeaway .quote{
-    font:italic 500 24px/1.42 "Instrument Serif",serif;color:#fff;letter-spacing:-.005em;
+  .quote-card .q b{color:var(--good);font-weight:700}
+  .quote-card .q .att{
+    display:block;margin-top:6px;font:400 11px/1 "JetBrains Mono",monospace;
+    color:var(--ink-3);letter-spacing:.04em;
   }
-  .takeaway .quote b{color:var(--teal-300);font-weight:600}
-  .takeaway .attribution{
-    margin-top:18px;font:500 12px/1 "JetBrains Mono",monospace;color:rgba(255,255,255,.55);letter-spacing:.06em;
+  .quote-card .links{display:flex;gap:8px;flex:none}
+  .quote-card .links a{
+    background:var(--bg);border:1px solid var(--line);color:var(--ink-2);
+    padding:8px 12px;border-radius:8px;text-decoration:none;
+    font:600 11px/1 "JetBrains Mono",monospace;letter-spacing:.04em;
+    transition:background .15s;
   }
-  .takeaway-side{display:flex;flex-direction:column;gap:18px}
-  .takeaway-side .punch{font:800 28px/1.15 "Inter";color:#fff;letter-spacing:-.015em}
-  .takeaway-side .punch span{color:var(--teal-300)}
-  .takeaway-side .desc{font:500 14px/1.55 "Inter";color:rgba(255,255,255,.7)}
-  .takeaway-side .links{display:flex;gap:12px;margin-top:6px}
-  .takeaway-side .links a{
-    background:rgba(255,255,255,.08);color:#fff;padding:10px 16px;border-radius:10px;
-    font:600 12px/1 "JetBrains Mono",monospace;text-decoration:none;letter-spacing:.04em;
-    border:1px solid rgba(255,255,255,.12);transition:background .15s;
-  }
-  .takeaway-side .links a:hover{background:rgba(255,255,255,.16)}
-
-  .footnote{
-    text-align:center;font:500 11.5px/1.6 "JetBrains Mono",monospace;color:var(--ink-400);
-    max-width:80ch;margin:0 auto;
-  }
-  .footnote a{color:var(--teal-700);text-decoration:underline;text-decoration-color:rgba(13,122,122,.3)}
+  .quote-card .links a:hover{background:var(--good-soft);color:var(--good);border-color:var(--good)}
 
   @media (max-width:1100px){
-    .duel{grid-template-columns:1fr;gap:18px}
-    .divider{height:8px;width:auto;flex-direction:row}
-    .divider .vstxt{rotate:0deg}
-    .hero{grid-template-columns:1fr;padding:36px 32px}
-    .hero-cta{align-items:flex-start}
-    .source-line{text-align:left}
-    .takeaway{grid-template-columns:1fr;padding:32px}
-    .numbers{grid-template-columns:1fr 1fr;padding:28px}
-    .num-cell{border-left:0;padding-left:0;border-top:1px solid var(--mint-200);padding-top:16px}
-    .num-cell:nth-child(-n+2){border-top:0;padding-top:0}
+    .duel{grid-template-columns:1fr}
+    .hero{flex-direction:column;align-items:flex-start;gap:18px}
+    .numbers{grid-template-columns:1fr 1fr}
+    .ncell:nth-child(2){border-right:0}
+    .ncell:nth-child(-n+2){border-bottom:1px solid var(--line)}
+    .quote-card{flex-direction:column;align-items:flex-start;gap:16px}
   }
 </style>
 </head>
 <body>
 
-<div class="stage">
-  <!-- nav bar -->
-  <div class="nav">
-    <div class="brand"><div class="brand-mark"></div><div class="brand-word">FlowLink</div></div>
-    <div class="navmeta">
-      <span class="live-pill"><span class="dot"></span>LIVE DUEL</span>
-      <span>recorded · <b id="recordedAt">2026-04-23 06:39 IST</b></span>
-      <span>localhost:3000</span>
+<div class="page">
+
+  <!-- slim header -->
+  <div class="head">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div class="brand-word">FlowLink</div>
+    </div>
+    <div class="head-meta">
+      <span class="live">LIVE</span>
+      <span>real captured runs · 2026-04-23</span>
     </div>
   </div>
 
-  <!-- hero -->
-  <section class="hero">
-    <div>
-      <div class="eyebrow"><span class="swatch"></span>WITH vs WITHOUT — same task, two AGENTS</div>
-      <h1>
-        <span class="a">Read the markdown.</span><br/>
-        <span class="quiet">Or </span><span class="b">scrape the HTML.</span><br/>
-        <span class="quiet">One </span><span class="vs">finishes,</span><span class="quiet"> one </span><span class="vs">stalls.</span>
-      </h1>
-      <p class="lede">
-        Two real Claude agents. Same task: <b>"discover FlowLink, create and pay a $10 USDC invoice."</b>
-        <span class="a" style="font-weight:700">Agent A</span> reads <code>/llms.txt</code> and the
-        <code>/skills/*.md</code> files. <span class="b" style="font-weight:700">Agent B</span> uses
-        Playwright on the rendered HTML and is forbidden from those paths. Press <b>Replay</b> to watch
-        their reasoning + tool calls play back side-by-side from real captured logs.
-      </p>
+  <!-- compact hero -->
+  <div class="hero">
+    <div class="hero-l">
+      <h1>Two agents. One task. <span class="good">Read the markdown</span> or <span class="bad">scrape the HTML</span>.</h1>
+      <p>Same goal: discover FlowLink and pay a $10 USDC invoice. <strong>Agent A</strong> reads <code>/llms.txt</code> and the <code>/skills/*.md</code> files. <strong>Agent B</strong> uses Playwright on the rendered HTML — <code>/skills/*</code> and <code>/.well-known/*</code> are off-limits. Real Claude runs, replayed below.</p>
     </div>
-    <div class="hero-cta">
-      <button class="runbtn" id="runBtn">
-        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 2.5v11a.5.5 0 0 0 .77.42l9-5.5a.5.5 0 0 0 0-.84l-9-5.5A.5.5 0 0 0 3 2.5z"/></svg>
-        Replay both agents
-      </button>
-      <div class="source-line">
-        Source: <b>agent-logs/live/{enabled-A,baseline-B}.json</b><br/>
-        captured during dispatched parallel agent runs against the live dev server.
-      </div>
-    </div>
-  </section>
+    <button class="runbtn" id="runBtn">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 2.5v11a.5.5 0 0 0 .77.42l9-5.5a.5.5 0 0 0 0-.84l-9-5.5A.5.5 0 0 0 3 2.5z"/></svg>
+      Replay
+    </button>
+  </div>
 
   <!-- duel -->
-  <section class="duel">
-    <!-- AGENT A -->
-    <div class="panel panel-A" data-side="A">
+  <div class="duel">
+
+    <!-- Agent A -->
+    <div class="panel A">
       <div class="panel-head">
-        <span class="pill pill-A">WITH</span>
-        <div class="panel-title">
-          Agent A · curl + skills.md
-          <span class="sub">read <code style="font-family:'JetBrains Mono',monospace;color:var(--teal-700)">/llms.txt</code> · 5 skill files allowed · no browser</span>
-        </div>
-        <span class="stat-dot idle" id="dot-A"></span>
+        <span class="pill good">With markdown</span>
+        <div class="panel-title">Agent A<span class="sub">curl + skill files</span></div>
+        <span class="status" id="A-stat"></span>
       </div>
-
-      <div class="counters">
-        <div class="counter"><span class="label">Tool calls</span><span class="val" id="A-calls">0</span><span class="sub">curl</span></div>
-        <div class="counter"><span class="label">Bytes</span><span class="val" id="A-bytes">0</span><span class="sub">cumulative</span></div>
-        <div class="counter"><span class="label">Time</span><span class="val" id="A-time">0s</span><span class="sub">wall</span></div>
-        <div class="counter"><span class="label">Step</span><span class="val" id="A-step">0/8</span><span class="sub">progress</span></div>
+      <div class="metrics">
+        <div class="metric"><span class="k">Calls</span><span class="v" id="A-calls">0</span></div>
+        <div class="metric"><span class="k">Bytes</span><span class="v" id="A-bytes">0</span></div>
+        <div class="metric"><span class="k">Step</span><span class="v" id="A-step">0/8</span></div>
       </div>
-      <div class="thread" id="A-thread"></div>
-
-      <div class="reason-area">
-        <div class="reason-card">
-          <div class="reason-label"><span class="num" id="A-rnum">—</span><span id="A-action-name">awaiting</span></div>
-          <div class="reason-text" id="A-thinking">Press Replay to start.</div>
-          <div class="next-line"><span class="arrow">→</span><span id="A-next">—</span></div>
+      <div class="progress" id="A-thread"></div>
+      <div class="body">
+        <div class="think">
+          <div class="head-row"><span class="num" id="A-rnum">—</span><span id="A-aname">awaiting</span></div>
+          <div class="text" id="A-think">Press Replay to start.</div>
+          <div class="next"><b>→</b><span id="A-next">—</span></div>
         </div>
-        <div class="action-card">
-          <div class="action-head"><span class="at">tool call</span><span class="label" id="A-action-label">curl</span></div>
-          <div class="action-body">
-            <div class="action-cmd" id="A-cmd">—</div>
-            <div class="action-result" id="A-result">—</div>
+        <div class="term">
+          <div class="head">tool call</div>
+          <div class="b">
+            <div class="cmd" id="A-cmd">—</div>
+            <div class="res" id="A-res">—</div>
           </div>
         </div>
       </div>
-
-      <div class="outcome-row">
-        <span class="outcome-tag pending" id="A-outcome-tag">PENDING</span>
-        <span class="outcome-line" id="A-outcome-line">Reasoning playback awaiting start.</span>
+      <div class="foot">
+        <span class="outcome-tag pending" id="A-tag">PENDING</span>
+        <span class="line" id="A-line">Awaiting start.</span>
       </div>
     </div>
 
-    <div class="divider"><span class="vstxt">vs</span></div>
-
-    <!-- AGENT B -->
-    <div class="panel panel-B" data-side="B">
+    <!-- Agent B -->
+    <div class="panel B">
       <div class="panel-head">
-        <span class="pill pill-B">WITHOUT</span>
-        <div class="panel-title">
-          Agent B · Playwright only
-          <span class="sub">browser tools · forbidden from <code style="font-family:'JetBrains Mono',monospace;color:var(--coral-700)">/llms.txt</code> · <code style="font-family:'JetBrains Mono',monospace;color:var(--coral-700)">/skills/*</code> · <code style="font-family:'JetBrains Mono',monospace;color:var(--coral-700)">/.well-known/*</code></span>
-        </div>
-        <span class="stat-dot idle" id="dot-B"></span>
+        <span class="pill bad">Without</span>
+        <div class="panel-title">Agent B<span class="sub">Playwright only</span></div>
+        <span class="status" id="B-stat"></span>
       </div>
-
-      <div class="counters">
-        <div class="counter"><span class="label">Tool calls</span><span class="val" id="B-calls">0</span><span class="sub">browser</span></div>
-        <div class="counter"><span class="label">Bytes (est)</span><span class="val" id="B-bytes">0</span><span class="sub">snapshots+pages</span></div>
-        <div class="counter"><span class="label">Time</span><span class="val" id="B-time">0s</span><span class="sub">wall</span></div>
-        <div class="counter"><span class="label">Step</span><span class="val" id="B-step">0/16</span><span class="sub">progress</span></div>
+      <div class="metrics">
+        <div class="metric"><span class="k">Calls</span><span class="v" id="B-calls">0</span></div>
+        <div class="metric"><span class="k">Bytes</span><span class="v" id="B-bytes">0</span></div>
+        <div class="metric"><span class="k">Step</span><span class="v" id="B-step">0/16</span></div>
       </div>
-      <div class="thread" id="B-thread"></div>
-
-      <div class="reason-area">
-        <div class="reason-card">
-          <div class="reason-label"><span class="num" id="B-rnum">—</span><span id="B-action-name">awaiting</span></div>
-          <div class="reason-text" id="B-thinking">Press Replay to start.</div>
-          <div class="next-line"><span class="arrow">→</span><span id="B-next">—</span></div>
+      <div class="progress" id="B-thread"></div>
+      <div class="body">
+        <div class="think">
+          <div class="head-row"><span class="num" id="B-rnum">—</span><span id="B-aname">awaiting</span></div>
+          <div class="text" id="B-think">Press Replay to start.</div>
+          <div class="next"><b>→</b><span id="B-next">—</span></div>
         </div>
-        <div class="action-card">
-          <div class="action-head"><span class="at">tool call</span><span class="label" id="B-action-label">browser</span></div>
-          <div class="action-body">
-            <div class="action-cmd" id="B-cmd">—</div>
-            <div class="action-result" id="B-result">—</div>
+        <div class="term">
+          <div class="head">tool call</div>
+          <div class="b">
+            <div class="cmd" id="B-cmd">—</div>
+            <div class="res" id="B-res">—</div>
           </div>
         </div>
       </div>
+      <div class="foot">
+        <span class="outcome-tag pending" id="B-tag">PENDING</span>
+        <span class="line" id="B-line">Awaiting start.</span>
+      </div>
+    </div>
+  </div>
 
-      <div class="outcome-row">
-        <span class="outcome-tag pending" id="B-outcome-tag">PENDING</span>
-        <span class="outcome-line" id="B-outcome-line">Reasoning playback awaiting start.</span>
-      </div>
+  <!-- numbers strip -->
+  <div class="numbers">
+    <div class="ncell">
+      <span class="nk">Tool calls</span>
+      <div class="nrow"><span class="va">8</span><span class="vb">16</span><span class="delta">2× fewer</span></div>
     </div>
-  </section>
+    <div class="ncell">
+      <span class="nk">Bytes fetched</span>
+      <div class="nrow"><span class="va">9.2 KB</span><span class="vb">180 KB</span><span class="delta">20× lighter</span></div>
+    </div>
+    <div class="ncell">
+      <span class="nk">Wall clock</span>
+      <div class="nrow"><span class="va">56 s</span><span class="vb">106 s</span><span class="delta">2× faster</span></div>
+    </div>
+    <div class="ncell">
+      <span class="nk">Outcome</span>
+      <div class="nrow"><span class="va" style="font-size:22px">SETTLED</span><span class="vb" style="font-size:13px">BLOCKED</span></div>
+    </div>
+  </div>
 
-  <!-- numbers callout -->
-  <section class="numbers">
-    <div class="num-cell">
-      <span class="label">Tool calls</span>
-      <div class="row">
-        <span class="v-A">8</span>
-        <span class="v-B">16</span>
-        <span class="delta">2× fewer</span>
-      </div>
-      <div class="sub">A read 3 markdown files and was done discovering. B brute-forced 12 conventional URLs and found only 404s.</div>
+  <!-- single-line quote -->
+  <div class="quote-card">
+    <div class="q">
+      "An agent allowed to read <b>/skills/pay.md</b> would complete this in ~2 calls; a browser-only agent burns 16 calls to discover that there is nothing to discover."
+      <span class="att">— Agent B's own JSON log · the agent we crippled saying so itself</span>
     </div>
-    <div class="num-cell">
-      <span class="label">Bytes fetched</span>
-      <div class="row">
-        <span class="v-A">9.2 KB</span>
-        <span class="v-B">~180 KB</span>
-        <span class="delta">20× lighter</span>
-      </div>
-      <div class="sub">Markdown is pure content. Browser snapshots are accessibility trees plus DOM plus framework runtime — fat by design.</div>
+    <div class="links">
+      <a href="./agent-logs/live/enabled-A.json">A.json</a>
+      <a href="./agent-logs/live/baseline-B.json">B.json</a>
+      <a href="./comparison.html">earlier comparison</a>
     </div>
-    <div class="num-cell">
-      <span class="label">Wall clock</span>
-      <div class="row">
-        <span class="v-A">56 s</span>
-        <span class="v-B">106 s</span>
-        <span class="delta">~2× faster</span>
-      </div>
-      <div class="sub">Even ignoring B's failure, every browser navigation pays a per-request page-load tax that a curl simply doesn't.</div>
-    </div>
-    <div class="num-cell">
-      <span class="label">Outcome</span>
-      <div class="row">
-        <span class="v-A" style="color:var(--green-700)">SETTLED</span>
-        <span class="v-B">BLOCKED</span>
-        <span class="delta">100% vs 0%</span>
-      </div>
-      <div class="sub">A produced a real <code style="font-family:'JetBrains Mono',monospace;font-size:.9em;color:var(--teal-700)">invoice_id</code>, <code style="font-family:'JetBrains Mono',monospace;font-size:.9em;color:var(--teal-700)">transaction_id</code>, and signed receipt. B produced nothing.</div>
-    </div>
-  </section>
+  </div>
 
-  <!-- takeaway -->
-  <section class="takeaway">
-    <div>
-      <div class="quote-mark">“</div>
-      <div class="quote">
-        Agent-native surfaces are not redundant — they are <b>load-bearing</b>, and stripping
-        them collapses the whole task. An agent allowed to read <code style="font-family:'JetBrains Mono',monospace;color:var(--teal-300)">/skills/pay.md</code> would
-        complete this in ~2 calls; a browser-only agent burns 16 calls and 100% of its
-        budget to discover that there is nothing to discover.
-      </div>
-      <div class="attribution">— Agent B, in its own JSON log · the agent we crippled saying so itself</div>
-    </div>
-    <div class="takeaway-side">
-      <div class="punch">The website <span>is</span> the SDK.<br/>And <span>differentiation</span>.</div>
-      <div class="desc">
-        Most APIs are agent-friendly because someone bolts an OpenAPI on top. FlowLink ships
-        the agent surface as primary — <code style="font-family:'JetBrains Mono',monospace;color:var(--teal-300)">.md</code> over HTTPS. The result above is what that
-        decision is worth, in real Claude tokens.
-      </div>
-      <div class="links">
-        <a href="./comparison.html">↔ comparison.html</a>
-        <a href="./v0.2-preview.html">▶ v0.2 preview</a>
-        <a href="./agent-logs/live/enabled-A.json">{ } enabled-A.json</a>
-        <a href="./agent-logs/live/baseline-B.json">{ } baseline-B.json</a>
-      </div>
-    </div>
-  </section>
-
-  <p class="footnote">
-    Both transcripts captured during a real session on <b id="captureDate">2026-04-23</b>. Agent A ran via Bash + curl + viem
-    (inline EIP-4361 signing); Agent B ran via the Playwright MCP browser tools with a hard URL blocklist.
-    Numbers above are taken verbatim from the JSON logs — no interpolation, no synthetic estimates.
-  </p>
 </div>
 
 <script>
-/* ========== embedded transcripts ========== */
 const A = {
   "agent": "enabled",
   "agent_label": "Agent A · curl + /llms.txt + /skills/*.md",
@@ -755,144 +643,94 @@ const B = {
 }
 ;
 
-/* ========== animation helpers ========== */
 const $ = id => document.getElementById(id);
-const PER_STEP_MS = 2400;       // each step displays for ~2.4s
-const RESULT_GAP_MS = 700;      // delay between thinking show and result show
+const PER_STEP = 2200;
+const GAP = 600;
 
 function fmtBytes(n){
   if (n < 1024) return n + " B";
   if (n < 1024*1024) return (n/1024).toFixed(1) + " KB";
   return (n/1024/1024).toFixed(1) + " MB";
 }
-function fmtVerb(action){
-  if (!action) return "—";
-  const m = action.match(/(GET|POST|DEL|PUT|PATCH|browser_\w+|node)/i);
-  return m ? m[0] : action.split(" ")[0];
-}
-function statClass(n){
-  if (n >= 200 && n < 300) return "s2";
-  if (n >= 400 && n < 500) return "s4";
-  if (n >= 500) return "s5";
-  if (n === 0) return "s2"; // node exit ok
-  return "";
-}
 
 function buildThread(side, total){
   const el = $(side+"-thread");
   el.innerHTML = "";
   for (let i = 0; i < total; i++){
-    const d = document.createElement("span");
-    d.className = "dot";
-    d.dataset.idx = i;
+    const d = document.createElement("span"); d.className = "dot";
     el.appendChild(d);
-    if (i < total-1){
-      const g = document.createElement("span");
-      g.className = "grow";
-      el.appendChild(g);
-    }
+    if (i < total-1){ const g = document.createElement("span"); g.className = "grow"; el.appendChild(g); }
   }
 }
 
-function setRunning(side){
-  $("dot-"+side).className = "stat-dot running";
-  $(side+"-outcome-tag").className = "outcome-tag pending";
-  $(side+"-outcome-tag").textContent = "RUNNING";
+function wait(ms){ return new Promise(r => setTimeout(r, ms)); }
+
+function fadeText(el, t){
+  el.classList.remove("fade"); void el.offsetWidth;
+  el.textContent = t;
+  el.classList.add("fade");
 }
 
-function fadeText(el, html){
-  el.classList.remove("fade-in");
-  void el.offsetWidth;
-  el.innerHTML = html;
-  el.classList.add("fade-in");
-}
-
-async function playSide(data, side){
+async function play(data, side){
   const total = data.steps.length;
   buildThread(side, total);
-  setRunning(side);
-  const start = performance.now();
+  $(side+"-stat").className = "status run";
+  $(side+"-tag").className = "outcome-tag pending"; $(side+"-tag").textContent = "RUNNING";
   let bytes = 0;
 
   for (let i = 0; i < total; i++){
     const step = data.steps[i];
-    // mark current dot
     $(side+"-thread").querySelectorAll(".dot").forEach((d, idx) => {
       d.classList.remove("now");
       if (idx < i) d.classList.add("done");
       if (idx === i) d.classList.add("now");
     });
-    // counters
     $(side+"-step").textContent = (i+1) + "/" + total;
     $(side+"-rnum").textContent = "STEP " + step.n.toString().padStart(2,"0");
-    $(side+"-action-name").textContent = fmtVerb(step.action);
-    $(side+"-action-label").textContent = step.tool_call.length > 60
-      ? step.tool_call.split("(")[0]
-      : step.tool_call.split(" ")[0];
-
-    fadeText($(side+"-thinking"), '"' + step.thinking + '"');
-    $(side+"-next").textContent = "next: " + (step.next_decision || "…");
+    const verb = (step.action || "").split(" ")[0];
+    $(side+"-aname").textContent = verb;
+    fadeText($(side+"-think"), step.thinking);
+    $(side+"-next").textContent = step.next_decision || "—";
     $(side+"-cmd").textContent = step.tool_call;
-    $(side+"-result").innerHTML = '<span class="muted" style="color:rgba(255,255,255,.5)">…awaiting…</span>';
+    $(side+"-res").innerHTML = '…awaiting…';
 
-    await wait(RESULT_GAP_MS);
-    // show result
-    const sc = statClass(step.result_status);
-    const stat = sc
-      ? '<span class="stat ' + sc + '">' + step.result_status + '</span>'
-      : '';
-    $(side+"-result").innerHTML = stat + (step.result_summary || "");
+    await wait(GAP);
+    const sc = step.result_status >= 200 && step.result_status < 300 ? "s2"
+             : step.result_status >= 400 ? "s4" : "";
+    const stat = sc ? '<span class="stat ' + sc + '">' + step.result_status + '</span>' : '';
+    $(side+"-res").innerHTML = stat + (step.result_summary || "");
 
-    // increment counters
     $(side+"-calls").textContent = String(i+1);
     if (typeof step.result_bytes === "number") bytes += step.result_bytes;
     $(side+"-bytes").textContent = fmtBytes(bytes);
-    const dt = Math.round((performance.now()-start)/1000);
-    $(side+"-time").textContent = dt + "s";
 
-    await wait(PER_STEP_MS - RESULT_GAP_MS);
+    await wait(PER_STEP - GAP);
   }
-  // final dot
-  $(side+"-thread").querySelectorAll(".dot").forEach(d => {
-    d.classList.remove("now");
-    d.classList.add("done");
-  });
-
-  // outcome
-  const outcomeOK = data.outcome === "success";
-  $("dot-"+side).className = "stat-dot " + (outcomeOK ? "success" : "blocked");
-  $(side+"-outcome-tag").className = "outcome-tag " + (outcomeOK ? "success" : "blocked");
-  $(side+"-outcome-tag").textContent = outcomeOK ? "✓ SETTLED" : "✗ BLOCKED";
-  $(side+"-outcome-line").textContent = data.outcome_summary;
-  // also update the final metrics from the log (so the big numbers match the displayed totals)
+  $(side+"-thread").querySelectorAll(".dot").forEach(d => { d.classList.remove("now"); d.classList.add("done"); });
+  const ok = data.outcome === "success";
+  $(side+"-stat").className = "status " + (ok ? "win" : "lose");
+  $(side+"-tag").className = "outcome-tag " + (ok ? "win" : "lose");
+  $(side+"-tag").textContent = ok ? "✓ SETTLED" : "✗ BLOCKED";
+  $(side+"-line").textContent = data.outcome_summary;
   $(side+"-bytes").textContent = fmtBytes(data.metrics.bytes_fetched_total ?? data.metrics.bytes_fetched_total_estimate ?? bytes);
-  $(side+"-time").textContent = (data.metrics.wall_clock_sec ?? Math.round((performance.now()-start)/1000)) + "s";
   $(side+"-calls").textContent = String(data.metrics.tool_calls);
 }
 
-function wait(ms){ return new Promise(r => setTimeout(r, ms)); }
-
 let running = false;
 async function run(){
-  if (running) return;
-  running = true;
+  if (running) return; running = true;
   $("runBtn").disabled = true;
-  $("runBtn").style.opacity = .55;
-  // reset
-  for (const side of ["A","B"]){
-    $(side+"-calls").textContent = "0";
-    $(side+"-bytes").textContent = "0";
-    $(side+"-time").textContent = "0s";
-    $(side+"-step").textContent = "0/" + (side==="A" ? A.steps.length : B.steps.length);
-    $("dot-"+side).className = "stat-dot idle";
+  for (const s of ["A","B"]){
+    $(s+"-calls").textContent = "0"; $(s+"-bytes").textContent = "0";
+    $(s+"-step").textContent = "0/" + (s==="A" ? A.steps.length : B.steps.length);
+    $(s+"-stat").className = "status";
+    $(s+"-think").textContent = "Press Replay to start.";
   }
-  await Promise.all([playSide(A, "A"), playSide(B, "B")]);
-  $("runBtn").disabled = false;
-  $("runBtn").style.opacity = 1;
-  running = false;
+  await Promise.all([play(A,"A"), play(B,"B")]);
+  $("runBtn").disabled = false; running = false;
 }
 $("runBtn").addEventListener("click", run);
-window.addEventListener("load", () => setTimeout(run, 600));
+window.addEventListener("load", () => setTimeout(run, 400));
 </script>
 </body>
 </html>
