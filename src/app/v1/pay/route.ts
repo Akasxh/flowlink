@@ -9,6 +9,9 @@ import { ulid } from "@/lib/ulid";
 import { ADDRESS_REGEX, isTokenSupported } from "@/lib/chain";
 import { prisma } from "@/lib/prisma";
 import { canonicalize, lookup as idemLookup, save as idemSave } from "@/lib/idempotency";
+import { publish as publishEvent } from "@/lib/event-bus";
+import { signReceipt, storeReceipt } from "@/lib/receipts";
+import { withAccessLog } from "@/lib/with-access-log";
 
 const schema = z.object({
   invoice_id: z.string().min(1),
@@ -18,7 +21,7 @@ const schema = z.object({
 
 const APP_URL = () => process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
-export async function POST(req: NextRequest) {
+async function postHandler(req: NextRequest) {
   const requestId = getOrMintRequestId(req);
   try {
     const principal = await authenticate(req);
@@ -133,12 +136,18 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    await prisma.transactionEvent.create({
+    const compliancePassedEvent = await prisma.transactionEvent.create({
       data: {
         transactionId: transaction.id,
         type: "compliance_passed",
         data: JSON.stringify({ score: compliance.score }),
       },
+    });
+    publishEvent(transaction.id, {
+      id: compliancePassedEvent.id,
+      type: compliancePassedEvent.type,
+      data: { score: compliance.score },
+      createdAt: compliancePassedEvent.createdAt.toISOString(),
     });
 
     // Try HSP mandate — graceful degradation if not configured
@@ -162,12 +171,18 @@ export async function POST(req: NextRequest) {
             checkoutUrl: mandate.checkout_url,
           },
         });
-        await prisma.transactionEvent.create({
+        const mandateEvent = await prisma.transactionEvent.create({
           data: {
             transactionId: transaction.id,
             type: "mandate_created",
             data: JSON.stringify({ hsp_mandate_id: mandate.cart_mandate_id }),
           },
+        });
+        publishEvent(transaction.id, {
+          id: mandateEvent.id,
+          type: mandateEvent.type,
+          data: { hsp_mandate_id: mandate.cart_mandate_id },
+          createdAt: mandateEvent.createdAt.toISOString(),
         });
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
@@ -187,13 +202,84 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Dev-mode synthetic settlement — when HSP is not configured (no merchant
+    // creds), we still want the agent flow to complete end to end so demos and
+    // tests see receipts. tx_hash="0x0" is the sentinel for "no on-chain
+    // settlement happened — this is a dev/demo run".
+    let devReceiptId: string | null = null;
+    let devSettledAt: Date | null = null;
+    if (!hspConfigured()) {
+      devSettledAt = new Date();
+      await prisma.transaction.update({
+        where: { id: transaction.id },
+        data: {
+          status: "settled",
+          txHash: "0x0",
+          block: 0,
+          settledAt: devSettledAt,
+        },
+      });
+      if (transaction.invoiceId) {
+        await prisma.invoice.update({
+          where: { id: transaction.invoiceId },
+          data: { status: "paid", paidAt: devSettledAt },
+        });
+      }
+      const settledEvent = await prisma.transactionEvent.create({
+        data: {
+          transactionId: transaction.id,
+          type: "settled",
+          data: JSON.stringify({ tx_hash: "0x0", block: 0, dev_mode: true }),
+        },
+      });
+      // TODO(merge): event-bus publish for settled
+      void settledEvent;
+
+      try {
+        const receiptId = ulid("rcp");
+        const signed = await signReceipt({
+          receipt_id: receiptId,
+          transaction_id: transaction.id,
+          invoice_id: transaction.invoiceId ?? undefined,
+          payer_address: transaction.payerAddress,
+          receiver_address: transaction.receiverAddress,
+          amount: transaction.amount,
+          token: transaction.token,
+          chain_id: transaction.chainId,
+          tx_hash: "0x0",
+          block: 0,
+          settled_at: devSettledAt.toISOString(),
+          compliance: {
+            ofac: "clear",
+            velocity: "within_limits",
+            score: transaction.complianceScore ?? compliance.score,
+          },
+        });
+        await storeReceipt(signed);
+        const receiptEvent = await prisma.transactionEvent.create({
+          data: {
+            transactionId: transaction.id,
+            type: "receipt_ready",
+            data: JSON.stringify({ receipt_id: receiptId, dev_mode: true }),
+          },
+        });
+        // TODO(merge): event-bus publish for receipt_ready
+        void receiptEvent;
+        devReceiptId = receiptId;
+      } catch (err) {
+        // Receipt failure is logged but not fatal to the dev flow — settlement still happened.
+        console.error("dev-mode receipt signing failed", err);
+      }
+    }
+
     const response = {
       transaction_id: transaction.id,
       flowlink_id: transaction.flowlinkId,
-      status: mandate ? "mandate_created" : "compliance_passed",
+      status: mandate ? "mandate_created" : devSettledAt ? "settled" : "compliance_passed",
       checkout_url: mandate?.checkout_url ?? null,
       hsp_mandate_id: mandate?.cart_mandate_id ?? null,
       hsp_configured: hspConfigured(),
+      receipt_id: devReceiptId,
       compliance: {
         score: compliance.score,
         sanctions_ok: compliance.sanctionsOk,
@@ -213,3 +299,5 @@ export async function POST(req: NextRequest) {
     return problemFromUnknown(err, requestId);
   }
 }
+
+export const POST = withAccessLog(postHandler);

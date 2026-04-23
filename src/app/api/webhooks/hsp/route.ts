@@ -5,6 +5,7 @@ import { getOrMintRequestId } from "@/lib/request-id";
 import { ulid } from "@/lib/ulid";
 import { prisma } from "@/lib/prisma";
 import { signReceipt, storeReceipt } from "@/lib/receipts";
+import { publish as publishEvent } from "@/lib/event-bus";
 
 type HspWebhookBody = {
   cart_mandate_id: string;
@@ -74,12 +75,18 @@ export async function POST(req: NextRequest) {
           data: { status: "paid", paidAt: new Date() },
         });
       }
-      await prisma.transactionEvent.create({
+      const settledEvent = await prisma.transactionEvent.create({
         data: {
           transactionId: txn.id,
           type: "settled",
           data: JSON.stringify({ tx_hash: body.tx_hash, block: body.block }),
         },
+      });
+      publishEvent(txn.id, {
+        id: settledEvent.id,
+        type: settledEvent.type,
+        data: { tx_hash: body.tx_hash, block: body.block },
+        createdAt: settledEvent.createdAt.toISOString(),
       });
 
       // Sign + store receipt
@@ -104,12 +111,18 @@ export async function POST(req: NextRequest) {
           },
         });
         await storeReceipt(signed);
-        await prisma.transactionEvent.create({
+        const receiptEvent = await prisma.transactionEvent.create({
           data: {
             transactionId: txn.id,
             type: "receipt_ready",
             data: JSON.stringify({ receipt_id: receiptId }),
           },
+        });
+        publishEvent(txn.id, {
+          id: receiptEvent.id,
+          type: receiptEvent.type,
+          data: { receipt_id: receiptId },
+          createdAt: receiptEvent.createdAt.toISOString(),
         });
       } catch (err) {
         console.error("receipt signing failed", err);
@@ -130,8 +143,14 @@ export async function POST(req: NextRequest) {
           data: { status: "pending", lockToken: null, lockedAt: null },
         });
       }
-      await prisma.transactionEvent.create({
+      const failedEvent = await prisma.transactionEvent.create({
         data: { transactionId: txn.id, type: "failed", data: JSON.stringify({ reason: "hsp_failed" }) },
+      });
+      publishEvent(txn.id, {
+        id: failedEvent.id,
+        type: failedEvent.type,
+        data: { reason: "hsp_failed" },
+        createdAt: failedEvent.createdAt.toISOString(),
       });
     }
 

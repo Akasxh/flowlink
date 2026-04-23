@@ -5,12 +5,13 @@ import { problemJson, problemFromUnknown } from "@/lib/errors";
 import { getOrMintRequestId } from "@/lib/request-id";
 import { ADDRESS_REGEX } from "@/lib/chain";
 import { getRateLimiter, rateLimitHeaders } from "@/lib/ratelimit";
+import { withAccessLog } from "@/lib/with-access-log";
 
 const schema = z.object({
   address: z.string().regex(ADDRESS_REGEX),
 });
 
-export async function POST(req: NextRequest) {
+async function postHandler(req: NextRequest) {
   const requestId = getOrMintRequestId(req);
   try {
     // Rate limit per IP for anonymous; per-auth-key if auth'd
@@ -111,3 +112,5 @@ export async function POST(req: NextRequest) {
     return problemFromUnknown(err, requestId);
   }
 }
+
+export const POST = withAccessLog(postHandler);

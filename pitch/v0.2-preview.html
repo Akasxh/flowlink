@@ -1,0 +1,631 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>FlowLink v0.2 · UX Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --teal-900:#063a3a; --teal-800:#0a4f4f; --teal-700:#0c6363; --teal-600:#0d7a7a;
+    --teal-500:#158b8b; --teal-400:#1da0a0; --cyan-500:#2fc4c4;
+    --green-600:#217a49; --green-500:#2a9056; --green-400:#3ba867;
+    --red-700:#b8354a; --red-500:#d85a6c; --red-400:#e07a8f;
+    --amber-500:#e0a23b; --amber-400:#f6c663;
+    --mint-50:#eef7f2; --mint-100:#e3f1ea; --mint-200:#cfe7db;
+    --ink-900:#0f1b22; --ink-700:#1a2733; --ink-500:#4a5a66; --ink-400:#6b7a85; --ink-200:#c6d0d7;
+    --paper:#ffffff; --paper-soft:#f7fbfa;
+    --term-bg:#062e2e; --term-text:#d8ece9; --term-dim:#7aa39e;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:#eef3f2;font-family:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink-700);min-height:100%}
+  body{display:flex;flex-direction:column;align-items:center;gap:32px;padding:24px;background:
+    radial-gradient(1200px 600px at 10% 0%,#d9ebe6 0,transparent 60%),
+    radial-gradient(900px 500px at 100% 100%,#dbe8df 0,transparent 60%),
+    #eef3f2;}
+
+  .slide{
+    width:100%;max-width:1600px;aspect-ratio:16/9;background:var(--paper);
+    border-radius:22px;
+    box-shadow:0 1px 0 rgba(12,99,99,.06),0 20px 60px -20px rgba(10,79,79,.35),0 40px 120px -40px rgba(10,79,79,.25);
+    overflow:hidden;position:relative;display:grid;grid-template-rows:auto auto 1fr auto;
+    padding:36px 48px 32px;gap:18px;container-type:inline-size;
+  }
+  .top{display:flex;align-items:center;justify-content:space-between;gap:24px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .brand-mark{
+    width:34px;height:34px;border-radius:10px;position:relative;
+    background:radial-gradient(120% 120% at 30% 20%,#1fb3a3 0%,#0d7a7a 55%,#083f3f 100%);
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.18),0 8px 20px -8px rgba(13,122,122,.6);
+  }
+  .brand-mark::before,.brand-mark::after{content:"";position:absolute;inset:6px;border-radius:50%;border:2.5px solid transparent;}
+  .brand-mark::before{border-top-color:#2fc4c4;border-right-color:#2fc4c4;transform:rotate(20deg)}
+  .brand-mark::after{border-bottom-color:#3ba867;border-left-color:#3ba867;transform:rotate(20deg)}
+  .brand-word{font-weight:800;font-size:20px;letter-spacing:-.01em;color:var(--teal-800)}
+  .kicker{
+    font-size:10px;font-weight:700;letter-spacing:.18em;color:var(--ink-400);
+    padding:7px 12px;border-radius:999px;background:var(--mint-50);border:1px solid var(--mint-200);
+  }
+  .kicker b{color:var(--teal-700)}
+  .badge-mock{
+    background:rgba(224,162,59,.18);color:#a07021;border:1px solid rgba(224,162,59,.4);
+  }
+
+  .head{display:grid;grid-template-columns:1.15fr .85fr;gap:28px;align-items:end}
+  h1{font-size:clamp(34px,3.6cqi,52px);font-weight:800;letter-spacing:-.02em;line-height:1.02;color:var(--teal-800);}
+  h1 .accent{background:linear-gradient(90deg,var(--teal-500),var(--green-500));-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .lede{color:var(--ink-500);font-size:clamp(12px,1.1cqi,16px);line-height:1.55;max-width:54ch;}
+  .lede b{color:var(--ink-700);font-weight:600}
+  .lede code{font-family:"JetBrains Mono",monospace;background:var(--mint-100);padding:1px 5px;border-radius:4px;font-size:.92em;color:var(--teal-700)}
+
+  .cornertag{
+    position:absolute;top:16px;right:20px;
+    font:700 10px/1 "JetBrains Mono",monospace;letter-spacing:.16em;color:var(--ink-400);text-transform:uppercase;
+  }
+
+  /* dashboard mockup */
+  .dash{
+    display:grid;grid-template-columns:200px 1fr;gap:0;
+    background:var(--paper-soft);border-radius:14px;overflow:hidden;
+    border:1px solid var(--mint-200);min-height:0;
+  }
+  .dash-side{
+    background:#f1f7f4;border-right:1px solid var(--mint-200);padding:18px 14px;
+    display:flex;flex-direction:column;gap:4px;
+  }
+  .dash-org{font:700 11px/1 "Inter";color:var(--teal-800);padding:0 8px 12px;border-bottom:1px solid var(--mint-200);margin-bottom:6px;display:flex;align-items:center;gap:8px}
+  .dash-org .dot{width:8px;height:8px;border-radius:50%;background:var(--green-500)}
+  .dash-nav{padding:6px 10px;font:600 12px/1.2 "Inter";color:var(--ink-500);border-radius:6px;cursor:default;display:flex;align-items:center;gap:8px}
+  .dash-nav.active{background:#fff;color:var(--teal-700);box-shadow:0 1px 0 rgba(0,0,0,.04)}
+  .dash-nav svg{width:13px;height:13px;opacity:.65}
+  .dash-main{padding:22px 26px;display:flex;flex-direction:column;gap:16px;min-height:0;overflow:auto}
+  .dash-h{font:800 18px/1 "Inter";color:var(--teal-800)}
+  .dash-sub{font:500 12px/1.4 "Inter";color:var(--ink-500);max-width:60ch}
+
+  .keytable{
+    border:1px solid var(--mint-200);border-radius:10px;overflow:hidden;background:#fff;
+    font-family:"JetBrains Mono",monospace;font-size:11.5px;
+  }
+  .keyrow{display:grid;grid-template-columns:170px 1fr 80px 80px 70px;gap:0;padding:10px 14px;border-bottom:1px solid var(--mint-100);align-items:center}
+  .keyrow:last-child{border-bottom:0}
+  .keyrow.h{background:#f7fbf9;font-weight:700;color:var(--ink-400);font-size:10px;letter-spacing:.1em;text-transform:uppercase}
+  .keyrow.h>div{font-family:"Inter",sans-serif}
+  .keyname{color:var(--teal-700);font-weight:700;font-family:"Inter",sans-serif;font-size:12.5px}
+  .keyprefix{color:var(--ink-700)}
+  .keyscope{color:var(--ink-500);font-size:10.5px}
+  .keyused{color:var(--ink-400);font-size:10.5px}
+  .keystat{display:inline-block;padding:2px 7px;border-radius:4px;font-size:9.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;font-family:"Inter",sans-serif}
+  .keystat.live{background:rgba(42,144,86,.18);color:var(--green-600)}
+  .keystat.test{background:rgba(13,122,122,.12);color:var(--teal-700)}
+  .keystat.revoked{background:rgba(216,90,108,.18);color:var(--red-700)}
+  .keyrow .actions{display:flex;gap:6px;justify-content:flex-end}
+  .iconbtn{
+    width:24px;height:24px;border-radius:6px;border:1px solid var(--mint-200);
+    background:#fff;display:grid;place-items:center;cursor:pointer;color:var(--ink-500);
+  }
+
+  .mintbtn{
+    appearance:none;border:0;cursor:pointer;align-self:flex-start;
+    background:linear-gradient(180deg,var(--teal-500),var(--teal-700));
+    color:#fff;font:700 12px/1 "Inter";letter-spacing:.02em;
+    padding:9px 14px;border-radius:8px;display:inline-flex;align-items:center;gap:7px;
+    box-shadow:0 4px 12px -4px rgba(13,122,122,.6);
+  }
+  .mintbtn svg{width:11px;height:11px}
+
+  .keyreveal{
+    background:#0a4040;color:#dff0ec;font-family:"JetBrains Mono",monospace;
+    border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:14px;
+    box-shadow:0 6px 20px -8px rgba(10,64,64,.5);
+  }
+  .keyreveal .lbl{font-size:10px;letter-spacing:.14em;color:#7aa39e;text-transform:uppercase;font-weight:700}
+  .keyreveal .val{font-size:13.5px;font-weight:600;letter-spacing:-.01em;color:#fff}
+  .keyreveal .copyhint{margin-left:auto;font-size:10px;color:#7aa39e}
+
+  /* SSE terminal */
+  .ssegrid{display:grid;grid-template-columns:.5fr 1fr;gap:18px;min-height:0}
+  .sse-spec{
+    background:var(--paper-soft);border:1px solid var(--mint-200);border-radius:12px;
+    padding:18px 20px;display:flex;flex-direction:column;gap:10px;
+  }
+  .sse-spec h3{font:700 14px/1.2 "Inter";color:var(--teal-800)}
+  .sse-spec p{font:500 11.5px/1.5 "Inter";color:var(--ink-500)}
+  .sse-spec code{background:var(--mint-100);padding:1px 5px;border-radius:4px;font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--teal-700)}
+  .sse-spec .endpoint{
+    background:#062e2e;color:var(--cyan-500);border-radius:8px;
+    padding:9px 12px;font:600 11.5px/1.4 "JetBrains Mono",monospace;
+  }
+  .sse-spec .endpoint .verb{background:rgba(47,196,196,.18);padding:1px 6px;border-radius:4px;margin-right:6px}
+
+  .sse-term{
+    background:linear-gradient(180deg,#0b5555 0%,#063737 100%);border-radius:12px;
+    overflow:hidden;display:grid;grid-template-rows:auto 1fr;min-height:0;
+  }
+  .sse-head{display:flex;align-items:center;gap:10px;padding:11px 16px;background:rgba(0,0,0,.25);border-bottom:1px solid rgba(255,255,255,.06);}
+  .sse-tag{padding:3px 9px;border-radius:6px;font:700 10px/1 "JetBrains Mono",monospace;letter-spacing:.12em;text-transform:uppercase;background:rgba(47,196,196,.18);color:#7ce0e0}
+  .sse-title{color:#fff;font:700 13px/1.2 "Inter"}
+  .sse-pulse{width:8px;height:8px;border-radius:50%;background:var(--green-500);box-shadow:0 0 0 4px rgba(42,144,86,.22);animation:pulse 1.5s infinite ease-in-out}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  .sse-body{padding:14px 18px;font:500 11.5px/1.55 "JetBrains Mono",monospace;color:var(--term-text);overflow:auto}
+  .sse-line{margin-bottom:5px;opacity:0;transform:translateY(3px);transition:opacity .35s,transform .35s}
+  .sse-line.on{opacity:1;transform:none}
+  .sse-line .ev{color:var(--amber-400);font-weight:700}
+  .sse-line .data{color:#cfe4e1}
+  .sse-line .ts{color:var(--term-dim);font-size:10.5px;margin-right:8px}
+  .sse-line.kw .ev{color:#3ba867}
+
+  /* MCP card */
+  .mcprow{display:grid;grid-template-columns:1fr 1fr;gap:16px;min-height:0}
+  .mcp-card{
+    background:var(--paper-soft);border:1px solid var(--mint-200);border-radius:12px;
+    padding:18px 22px;display:flex;flex-direction:column;gap:12px;
+  }
+  .mcp-card h3{font:700 14px/1.2 "Inter";color:var(--teal-800);display:flex;align-items:center;gap:8px}
+  .mcp-card h3 .pill{font:700 9px/1 "JetBrains Mono",monospace;background:var(--mint-100);color:var(--teal-700);padding:3px 7px;border-radius:4px;letter-spacing:.1em}
+  .mcp-card p{font:500 12px/1.5 "Inter";color:var(--ink-500)}
+  .mcp-flow{display:flex;align-items:center;gap:10px;font:600 11px/1 "JetBrains Mono",monospace;color:var(--ink-500);flex-wrap:wrap}
+  .mcp-flow .step{background:#fff;border:1px solid var(--mint-200);padding:6px 10px;border-radius:6px;color:var(--teal-700)}
+  .mcp-flow .arrow{color:var(--ink-200)}
+  .mcp-tools{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:6px}
+  .mcp-tool{background:#fff;border:1px solid var(--mint-200);padding:6px 9px;border-radius:6px;display:flex;align-items:center;gap:6px;font:500 11px/1 "JetBrains Mono",monospace;color:var(--teal-700)}
+  .mcp-tool .ti{color:var(--green-500);font-size:13px}
+
+  .claude-card{
+    background:#fff;border:1px solid var(--mint-200);border-radius:12px;padding:18px 22px;
+    display:flex;flex-direction:column;gap:12px;
+  }
+  .claude-head{display:flex;align-items:center;gap:10px}
+  .claude-logo{
+    width:30px;height:30px;border-radius:7px;background:linear-gradient(135deg,#cf7847,#a05a2c);
+    display:grid;place-items:center;color:#fff;font-weight:800;font-size:13px;
+  }
+  .claude-head h4{font:700 13px/1.2 "Inter";color:var(--ink-700)}
+  .claude-head .muted{font:500 11px/1 "Inter";color:var(--ink-400)}
+  .claude-conv{
+    background:var(--mint-50);border-radius:8px;padding:10px 12px;
+    font:500 12px/1.45 "Inter";color:var(--ink-700);
+  }
+  .claude-conv .me{color:var(--teal-800);font-weight:600}
+  .claude-conv .tool{
+    background:rgba(13,122,122,.08);border-left:2px solid var(--teal-500);
+    padding:6px 9px;border-radius:0 6px 6px 0;margin-top:6px;
+    font:500 11px/1.4 "JetBrains Mono",monospace;color:var(--teal-700);
+  }
+
+  /* OpenAPI */
+  .openapi-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:18px;min-height:0}
+  .openapi-card{
+    background:var(--paper-soft);border:1px solid var(--mint-200);border-radius:12px;
+    padding:18px 20px;overflow:hidden;display:flex;flex-direction:column;gap:10px;
+  }
+  .openapi-pill{
+    align-self:flex-start;background:rgba(13,122,122,.1);color:var(--teal-700);
+    font:700 10px/1 "JetBrains Mono",monospace;letter-spacing:.1em;text-transform:uppercase;
+    padding:4px 8px;border-radius:4px;
+  }
+  .openapi-route{
+    background:#fff;border:1px solid var(--mint-200);border-radius:8px;
+    padding:8px 12px;font:600 11.5px/1.3 "JetBrains Mono",monospace;
+    display:flex;align-items:center;gap:8px;
+  }
+  .openapi-route .verb{padding:2px 7px;border-radius:4px;font-size:10px;letter-spacing:.06em}
+  .openapi-route .verb.get{background:rgba(47,196,196,.18);color:#0a8585}
+  .openapi-route .verb.post{background:rgba(42,144,86,.18);color:var(--green-600)}
+  .openapi-route .verb.delete{background:rgba(216,90,108,.18);color:var(--red-700)}
+  .openapi-route .path{color:var(--teal-800);flex:1}
+  .openapi-route .desc{color:var(--ink-400);font-family:"Inter";font-size:11px;font-weight:500}
+
+  .yaml-pre{
+    background:#062e2e;color:#cfe4e1;border-radius:10px;
+    padding:14px 16px;font:500 11px/1.55 "JetBrains Mono",monospace;
+    overflow:auto;max-height:100%;
+  }
+  .yaml-pre .key{color:#f6c663}
+  .yaml-pre .str{color:#8ee4e4}
+  .yaml-pre .num{color:#ffbec9}
+  .yaml-pre .cm{color:#7aa39e;font-style:italic}
+
+  /* observability */
+  .obs-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;min-height:0}
+  .obs-stat{
+    background:var(--paper-soft);border:1px solid var(--mint-200);border-radius:12px;
+    padding:16px 18px;display:flex;flex-direction:column;gap:6px;
+  }
+  .obs-stat .lbl{font:700 10px/1 "JetBrains Mono",monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-400)}
+  .obs-stat .val{font:800 26px/1 "Inter";color:var(--teal-800);font-variant-numeric:tabular-nums}
+  .obs-stat .delta{font:600 11px/1 "JetBrains Mono",monospace;color:var(--green-600)}
+  .obs-stat .sub{font:500 11px/1.4 "Inter";color:var(--ink-500)}
+
+  .obs-table{
+    grid-column:1/-1;background:var(--paper-soft);border:1px solid var(--mint-200);
+    border-radius:12px;overflow:hidden;
+  }
+  .obs-row{
+    display:grid;grid-template-columns:120px 1fr 90px 70px 90px;gap:10px;
+    padding:9px 16px;border-bottom:1px solid var(--mint-100);
+    font:500 11.5px/1.3 "JetBrains Mono",monospace;align-items:center;
+  }
+  .obs-row.h{background:#f7fbf9;font:700 10px/1 "Inter";color:var(--ink-400);text-transform:uppercase;letter-spacing:.1em}
+  .obs-row .fp{color:var(--teal-700);font-weight:700}
+  .obs-row .route{color:var(--ink-700)}
+  .obs-row .ms{color:var(--ink-500);text-align:right}
+  .obs-row .stat{display:inline-block;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;text-align:center}
+  .obs-row .stat.s2{background:rgba(42,144,86,.18);color:var(--green-600)}
+  .obs-row .stat.s4{background:rgba(216,90,108,.18);color:var(--red-700)}
+  .obs-row .stat.s5{background:rgba(184,53,74,.22);color:var(--red-700)}
+
+  /* roadmap slide */
+  .roadmap{display:grid;grid-template-columns:1fr 1fr;gap:18px;min-height:0}
+  .roadmap-col{
+    background:var(--paper-soft);border:1px solid var(--mint-200);border-radius:12px;
+    padding:18px 20px;display:flex;flex-direction:column;gap:8px;
+  }
+  .roadmap-col h3{font:700 13px/1 "Inter";color:var(--teal-800);text-transform:uppercase;letter-spacing:.04em;font-size:11px}
+  .road-item{
+    background:#fff;border:1px solid var(--mint-200);padding:9px 12px;border-radius:8px;
+    display:flex;align-items:center;gap:10px;font:500 12px/1.3 "Inter";color:var(--ink-700);
+  }
+  .road-item .num{
+    width:22px;height:22px;border-radius:50%;background:var(--mint-100);color:var(--teal-700);
+    font:700 10px/1 "JetBrains Mono",monospace;display:grid;place-items:center;flex:none;
+  }
+  .road-item .what{flex:1}
+  .road-item .what b{color:var(--teal-800);font-weight:700}
+  .road-item .stat-pill{
+    font:700 9px/1 "JetBrains Mono",monospace;letter-spacing:.06em;text-transform:uppercase;
+    padding:3px 7px;border-radius:4px;flex:none;
+  }
+  .stat-pill.shipping{background:rgba(42,144,86,.18);color:var(--green-600)}
+  .stat-pill.preview{background:rgba(224,162,59,.2);color:#a07021}
+  .stat-pill.future{background:rgba(13,122,122,.1);color:var(--teal-700)}
+  .stat-pill.deferred{background:rgba(75,90,102,.1);color:var(--ink-500)}
+
+  .ctaband{
+    background:linear-gradient(180deg,var(--teal-500),var(--teal-700));color:#fff;
+    border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:14px;justify-content:space-between;
+  }
+  .ctaband .label{font:700 13px/1.3 "Inter"}
+  .ctaband .label b{font-weight:800}
+  .ctaband .links{font:600 11.5px/1 "JetBrains Mono",monospace;display:flex;gap:14px}
+  .ctaband .links a{color:#fff;text-decoration:underline;text-decoration-color:rgba(255,255,255,.4)}
+
+  @page{size:1600px 900px;margin:0}
+  @media print{html,body{background:#fff}body{padding:0;display:block}.slide{box-shadow:none;border-radius:0;max-width:none;width:1600px;height:900px;aspect-ratio:auto;page-break-after:always}}
+
+  @media (max-width:860px){
+    .slide{aspect-ratio:auto;padding:18px}
+    .head,.dash,.ssegrid,.mcprow,.openapi-grid,.obs-grid,.roadmap{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+
+<!-- ====================== Slide 1 — Roadmap overview ====================== -->
+<main class="slide" aria-label="v0.2 roadmap">
+  <div class="top">
+    <div class="brand"><div class="brand-mark"></div><div class="brand-word">FlowLink</div></div>
+    <div class="kicker">v0.2 PREVIEW · <b>UX BEFORE WE BUILD</b></div>
+  </div>
+
+  <div class="head">
+    <div><h1>What's <span class="accent">next</span>.<br/>Designed before built.</h1></div>
+    <p class="lede">
+      v0.1 ships the agent-native surface end-to-end (<code>llms.txt</code> + 5 skills + 13 routes + ed25519 receipts +
+      SIWE/JWT). v0.2 fills the gaps real agents asked for: <b>SSE event streams</b> for multi-agent orchestration,
+      a <b>hosted MCP server</b> so Claude Desktop auto-configures, an <b>API key dashboard</b> for dev/test,
+      <b>OpenAPI 3.1</b> auto-generated from the same Zod schemas, and a <b>live observability tab</b> so we can see
+      which agent stacks actually use us. Each shipped as an independent module — a feature failing never breaks the
+      others.
+    </p>
+  </div>
+
+  <div class="roadmap">
+    <div class="roadmap-col">
+      <h3>v0.2 — building this round</h3>
+      <div class="road-item"><div class="num">1</div><div class="what"><b>SSE event stream</b> · <code style="font:600 10px/1 'JetBrains Mono',monospace;color:var(--teal-700)">/v1/transactions/[id]/events</code> · multi-agent orchestration</div><div class="stat-pill preview">PREVIEW</div></div>
+      <div class="road-item"><div class="num">2</div><div class="what"><b>Hosted MCP server</b> · <code style="font:600 10px/1 'JetBrains Mono',monospace;color:var(--teal-700)">/mcp</code> SSE transport, 6 tools</div><div class="stat-pill preview">PREVIEW</div></div>
+      <div class="road-item"><div class="num">3</div><div class="what"><b>OpenAPI 3.1</b> auto-gen at <code style="font:600 10px/1 'JetBrains Mono',monospace;color:var(--teal-700)">/.well-known/openapi.yaml</code></div><div class="stat-pill preview">PREVIEW</div></div>
+      <div class="road-item"><div class="num">4</div><div class="what"><b>API key dashboard</b> · <code style="font:600 10px/1 'JetBrains Mono',monospace;color:var(--teal-700)">/dashboard/keys</code> · scoped, revocable, prefix-searchable</div><div class="stat-pill preview">PREVIEW</div></div>
+      <div class="road-item"><div class="num">5</div><div class="what"><b>Observability tab</b> · agent fingerprints, p50/p95, error mix</div><div class="stat-pill preview">PREVIEW</div></div>
+    </div>
+    <div class="roadmap-col">
+      <h3>v0.1 — already shipped</h3>
+      <div class="road-item"><div class="num">✓</div><div class="what"><b>Static discovery</b> · llms.txt + 5 skill .md + mcp.json + robots</div><div class="stat-pill shipping">DONE</div></div>
+      <div class="road-item"><div class="num">✓</div><div class="what"><b>SIWE → ed25519 JWT</b> · with JWKS + scopes</div><div class="stat-pill shipping">DONE</div></div>
+      <div class="road-item"><div class="num">✓</div><div class="what"><b>Compliance fail-closed</b> · OFAC + velocity, embedded SDN fallback</div><div class="stat-pill shipping">DONE</div></div>
+      <div class="road-item"><div class="num">✓</div><div class="what"><b>Idempotency</b> · 24h replay window, byte-deterministic</div><div class="stat-pill shipping">DONE</div></div>
+      <div class="road-item"><div class="num">✓</div><div class="what"><b>RFC 9457 Problem+JSON</b> · 25 codes, every one with <code style="font:600 10px/1 'JetBrains Mono',monospace;color:var(--teal-700)">agent_action</code></div><div class="stat-pill shipping">DONE</div></div>
+      <div class="road-item"><div class="num">✓</div><div class="what"><b>HSP single-pay</b> · graceful degradation when creds missing</div><div class="stat-pill shipping">DONE</div></div>
+      <div class="road-item"><div class="num">→</div><div class="what"><b>Production deploy</b> · Vercel + Postgres + Upstash + HSP creds</div><div class="stat-pill deferred">OPS</div></div>
+    </div>
+  </div>
+
+  <div class="ctaband">
+    <div class="label">Companion: <b>see the with-vs-without comparison</b> with real agent-run data</div>
+    <div class="links">
+      <a href="./comparison.html">→ comparison.html</a>
+      <a href="./index.html">→ index.html</a>
+      <a href="./demo-live-run.log">→ demo-live-run.log</a>
+    </div>
+  </div>
+
+  <div class="cornertag">SLIDE 1 / 5 · ROADMAP</div>
+</main>
+
+<!-- ====================== Slide 2 — SSE event stream ====================== -->
+<main class="slide" aria-label="SSE event stream preview">
+  <div class="top">
+    <div class="brand"><div class="brand-mark"></div><div class="brand-word">FlowLink</div></div>
+    <div class="kicker badge-mock">UX MOCK · <b>NOT YET SHIPPED</b></div>
+  </div>
+
+  <div class="head">
+    <div><h1>Multi-agent <span class="accent">orchestration</span>.<br/>One transaction, every role.</h1></div>
+    <p class="lede">
+      <code>GET /v1/transactions/{id}/events</code> with <code>Accept: text/event-stream</code>. A payer agent fires
+      <code>pay</code>, an auditor agent subscribes to the same <code>transaction_id</code>, a receipt-consumer agent
+      waits for the <b>receipt_ready</b> event. Resumable via <code>Last-Event-ID</code>. Backed by Redis pub/sub,
+      one channel per txn, TTL 1 h. <b>Press play below</b> — this is exactly what the wire looks like.
+    </p>
+  </div>
+
+  <div class="ssegrid">
+    <aside class="sse-spec">
+      <h3>Endpoint</h3>
+      <div class="endpoint"><span class="verb">GET</span>/v1/transactions/{id}/events</div>
+      <p>Auth: <code>Authorization: Bearer</code></p>
+      <p>Content-Type: <code>text/event-stream</code></p>
+      <p>Resume: <code>Last-Event-ID: evt_…</code></p>
+      <h3 style="margin-top:6px">Event types</h3>
+      <ul style="list-style:none;padding:0;font:600 11.5px/1.8 'JetBrains Mono',monospace;color:var(--ink-700)">
+        <li>· <span style="color:var(--amber-500)">compliance_passed</span></li>
+        <li>· <span style="color:var(--teal-700)">mandate_created</span></li>
+        <li>· <span style="color:var(--green-600)">settled</span></li>
+        <li>· <span style="color:var(--green-600)">receipt_ready</span></li>
+        <li>· <span style="color:var(--red-500)">failed</span></li>
+      </ul>
+    </aside>
+
+    <div class="sse-term">
+      <div class="sse-head">
+        <span class="sse-pulse"></span>
+        <div class="sse-tag">SSE</div>
+        <div class="sse-title">streaming · txn_01KPVCGGHYTHTA8Q9QGRTHTA8Q</div>
+      </div>
+      <div class="sse-body" id="sseBody">
+        <div class="sse-line"><span class="ts">20:01:09.521</span><span class="ev">event:</span> compliance_passed</div>
+        <div class="sse-line"><span class="ts">20:01:09.521</span><span class="ev">data:</span> <span class="data">{"transaction_id":"txn_…GRTHTA8Q","score":100,"sanctions_ok":true}</span></div>
+        <div class="sse-line"><span class="ts">20:01:11.402</span><span class="ev">event:</span> mandate_created</div>
+        <div class="sse-line"><span class="ts">20:01:11.402</span><span class="ev">data:</span> <span class="data">{"hsp_mandate_id":"CM-abc-123","checkout_url":"https://checkout.hsp..."}</span></div>
+        <div class="sse-line"><span class="ts">20:01:38.178</span><span class="ev">event:</span> settled</div>
+        <div class="sse-line"><span class="ts">20:01:38.178</span><span class="ev">data:</span> <span class="data">{"tx_hash":"0xabc1...ef01","block":18402913,"amount":"10.00","token":"USDC"}</span></div>
+        <div class="sse-line kw"><span class="ts">20:01:38.954</span><span class="ev">event:</span> receipt_ready</div>
+        <div class="sse-line kw"><span class="ts">20:01:38.954</span><span class="ev">data:</span> <span class="data">{"receipt_id":"rcp_01KPVCH3M…","key_id":"flk-receipt-2026-04"}</span></div>
+        <div class="sse-line"><span class="ts" style="color:var(--green-500)">▶</span><span class="ev" style="color:var(--green-500)">stream complete</span> · 4 events delivered, channel closing in 60m</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cornertag">SLIDE 2 / 5 · SSE</div>
+</main>
+
+<!-- ====================== Slide 3 — MCP server ====================== -->
+<main class="slide" aria-label="MCP server preview">
+  <div class="top">
+    <div class="brand"><div class="brand-mark"></div><div class="brand-word">FlowLink</div></div>
+    <div class="kicker badge-mock">UX MOCK · <b>NOT YET SHIPPED</b></div>
+  </div>
+
+  <div class="head">
+    <div><h1>Auto-config <span class="accent">Claude Desktop</span>.<br/>One JSON, six tools.</h1></div>
+    <p class="lede">
+      A user pastes <code>https://flowlink.ink/.well-known/mcp.json</code> into Claude Desktop's MCP settings.
+      That manifest already exists — v0.2 wires the actual <code>/mcp</code> SSE endpoint behind it. Now Claude can
+      <code>create_invoice</code>, <code>pay_invoice</code>, <code>check_sanctions</code>, <code>get_receipt</code>,
+      etc. directly as tools — no copy-paste of curl commands, no out-of-band auth. SIWE happens once;
+      JWT carried per session.
+    </p>
+  </div>
+
+  <div class="mcprow">
+    <div class="mcp-card">
+      <h3>FlowLink MCP server <span class="pill">SSE</span></h3>
+      <p>Endpoint: <code>https://flowlink.ink/mcp</code> · Token URL: <code>/v1/auth/siwe/verify</code></p>
+      <div class="mcp-flow">
+        <div class="step">Client</div>
+        <div class="arrow">→</div>
+        <div class="step">SSE handshake</div>
+        <div class="arrow">→</div>
+        <div class="step">JSON-RPC tool/call</div>
+        <div class="arrow">→</div>
+        <div class="step">/v1/* under the hood</div>
+      </div>
+      <div class="mcp-tools">
+        <div class="mcp-tool"><span class="ti">●</span>create_invoice</div>
+        <div class="mcp-tool"><span class="ti">●</span>get_invoice</div>
+        <div class="mcp-tool"><span class="ti">●</span>pay_invoice</div>
+        <div class="mcp-tool"><span class="ti">●</span>check_sanctions</div>
+        <div class="mcp-tool"><span class="ti">●</span>get_receipt</div>
+        <div class="mcp-tool"><span class="ti">●</span>get_reputation</div>
+      </div>
+    </div>
+
+    <div class="claude-card">
+      <div class="claude-head">
+        <div class="claude-logo">C</div>
+        <div>
+          <h4>Claude Desktop</h4>
+          <div class="muted">flowlink-remote · 6 tools · authenticated</div>
+        </div>
+      </div>
+      <div class="claude-conv">
+        <div><span class="me">You:</span> Pay vendor.eth $25 USDC for the Q3 audit invoice.</div>
+        <div class="tool">→ create_invoice({receiver_address: "vendor.eth", amount: "25.00", token: "USDC", purpose: "Q3 audit"}) <br/>← {invoice_id: "inv_01KPV…", flowlink_id: "flowlink:inv/…"}</div>
+        <div class="tool">→ pay_invoice({invoice_id: "inv_01KPV…", payer_address: "agent.flowlink.eth"}) <br/>← {transaction_id: "txn_…", status: "compliance_passed", events_url: "/v1/transactions/…/events"}</div>
+        <div class="tool">→ get_receipt({transaction_id: "txn_…"}) <span style="color:var(--ink-400)">… waits for receipt_ready event</span></div>
+        <div style="margin-top:6px"><span class="me">Claude:</span> Settled. Receipt <code style="color:var(--teal-700);font-family:'JetBrains Mono',monospace">rcp_01KPV…</code> signed by FlowLink (verifiable against the published ed25519 key). Compliance score 100, OFAC clear.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cornertag">SLIDE 3 / 5 · MCP</div>
+</main>
+
+<!-- ====================== Slide 4 — API key dashboard ====================== -->
+<main class="slide" aria-label="API key dashboard preview">
+  <div class="top">
+    <div class="brand"><div class="brand-mark"></div><div class="brand-word">FlowLink</div></div>
+    <div class="kicker badge-mock">UX MOCK · <b>NOT YET SHIPPED</b></div>
+  </div>
+
+  <div class="head">
+    <div><h1>API keys for <span class="accent">dev/test</span>.<br/>Scoped, revocable, in-app.</h1></div>
+    <p class="lede">
+      SIWE is the agent-default. But every <code>llms.txt</code> reader asks for a quick way to try without a wallet.
+      v0.2 adds <code>/dashboard/keys</code> — the human flow that mints a scoped <code>flk_test_*</code> bearer.
+      Backed by the <code>ApiKey</code> Prisma model that already exists. <b>One reveal at mint time</b>, then
+      stored as bcrypt hash. Per-key scope picker, last-used timestamps, one-click revoke.
+    </p>
+  </div>
+
+  <div class="dash">
+    <aside class="dash-side">
+      <div class="dash-org"><span class="dot"></span>S Akash · prod</div>
+      <div class="dash-nav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Overview</div>
+      <div class="dash-nav active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>API keys</div>
+      <div class="dash-nav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Activity</div>
+      <div class="dash-nav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Receipts</div>
+      <div class="dash-nav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-6 0v4M5 9h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2z"/></svg>Settings</div>
+    </aside>
+
+    <div class="dash-main">
+      <div>
+        <div class="dash-h">API keys</div>
+        <div class="dash-sub">Scoped bearer tokens for non-wallet agent integrations. Test keys never settle real money. Live keys can. <a style="color:var(--teal-700)" href="/skills/errors.md">Errors catalogue →</a></div>
+      </div>
+
+      <button class="mintbtn">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1v14M1 8h14" stroke="currentColor" stroke-width="2"/></svg>
+        Mint a new key
+      </button>
+
+      <div class="keyreveal">
+        <div>
+          <div class="lbl">Just minted · copy now (won't show again)</div>
+          <div class="val">flk_test_8YXcM3Vt7PnDrLqKf1SaAhBdRzWxJoEnUiCpQt5gMv</div>
+        </div>
+        <div class="copyhint">⌘C to copy</div>
+      </div>
+
+      <div class="keytable">
+        <div class="keyrow h">
+          <div>Name</div><div>Prefix</div><div>Scopes</div><div>Last used</div><div>Status</div>
+        </div>
+        <div class="keyrow">
+          <div class="keyname">test-mcp-bridge</div>
+          <div class="keyprefix">flk_test_8YXcM3Vt</div>
+          <div class="keyscope">all 6 scopes</div>
+          <div class="keyused">just now</div>
+          <div><span class="keystat test">test</span></div>
+        </div>
+        <div class="keyrow">
+          <div class="keyname">production-payer</div>
+          <div class="keyprefix">flk_live_aB12cD34</div>
+          <div class="keyscope">pay:execute, receipt:read</div>
+          <div class="keyused">3m ago</div>
+          <div><span class="keystat live">live</span></div>
+        </div>
+        <div class="keyrow">
+          <div class="keyname">audit-readonly</div>
+          <div class="keyprefix">flk_live_pQ98rS76</div>
+          <div class="keyscope">invoice:read, receipt:read</div>
+          <div class="keyused">2h ago</div>
+          <div><span class="keystat live">live</span></div>
+        </div>
+        <div class="keyrow" style="opacity:.55">
+          <div class="keyname">leaked-rotated-2026-04</div>
+          <div class="keyprefix">flk_live_xyz000…</div>
+          <div class="keyscope">all 6 scopes</div>
+          <div class="keyused">1d ago</div>
+          <div><span class="keystat revoked">revoked</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cornertag">SLIDE 4 / 5 · DASHBOARD</div>
+</main>
+
+<!-- ====================== Slide 5 — OpenAPI + Observability ====================== -->
+<main class="slide" aria-label="OpenAPI and observability preview">
+  <div class="top">
+    <div class="brand"><div class="brand-mark"></div><div class="brand-word">FlowLink</div></div>
+    <div class="kicker badge-mock">UX MOCK · <b>NOT YET SHIPPED</b></div>
+  </div>
+
+  <div class="head">
+    <div><h1>Spec + signal: <span class="accent">OpenAPI</span> & <span class="accent">live agents</span>.</h1></div>
+    <p class="lede">
+      Right side is what every <code>/v1/*</code> handler already has — a Zod schema. v0.2 plugs <code>zod-to-openapi</code>
+      and serves <code>/.well-known/openapi.yaml</code> built from those schemas. CI diffs to a committed snapshot.
+      Right of that: <code>/dashboard/agents</code> — agent fingerprints, p50/p95 by route, error mix per agent stack.
+    </p>
+  </div>
+
+  <div class="openapi-grid">
+    <div class="openapi-card">
+      <span class="openapi-pill">/.well-known/openapi.yaml</span>
+      <div class="openapi-route"><span class="verb post">POST</span><span class="path">/v1/auth/siwe/nonce</span><span class="desc">issue EIP-4361 nonce</span></div>
+      <div class="openapi-route"><span class="verb post">POST</span><span class="path">/v1/auth/siwe/verify</span><span class="desc">→ access_token (ed25519 JWT)</span></div>
+      <div class="openapi-route"><span class="verb post">POST</span><span class="path">/v1/invoices</span><span class="desc">create invoice (Idempotency-Key)</span></div>
+      <div class="openapi-route"><span class="verb get">GET</span><span class="path">/v1/invoices/{id}</span><span class="desc">read invoice</span></div>
+      <div class="openapi-route"><span class="verb delete">DEL</span><span class="path">/v1/invoices/{id}</span><span class="desc">cancel (only while pending)</span></div>
+      <div class="openapi-route"><span class="verb post">POST</span><span class="path">/v1/pay</span><span class="desc">settle via HSP single-pay</span></div>
+      <div class="openapi-route"><span class="verb post">POST</span><span class="path">/v1/compliance/check</span><span class="desc">OFAC + velocity (fail-closed)</span></div>
+      <div class="openapi-route"><span class="verb get">GET</span><span class="path">/v1/transactions/{id}/events</span><span class="desc">SSE event stream</span></div>
+      <div class="openapi-route"><span class="verb get">GET</span><span class="path">/v1/receipts/{id}</span><span class="desc">ed25519-signed receipt</span></div>
+      <div class="openapi-route"><span class="verb get">GET</span><span class="path">/v1/reputation/{address}</span><span class="desc">portable trust score</span></div>
+    </div>
+
+    <div class="openapi-card">
+      <span class="openapi-pill">/dashboard/agents · live</span>
+      <div class="obs-grid" style="grid-template-columns:1fr 1fr">
+        <div class="obs-stat">
+          <span class="lbl">Calls 5m</span><span class="val">1,847</span><span class="delta">▲ 12.4% vs 5m ago</span>
+        </div>
+        <div class="obs-stat">
+          <span class="lbl">P95 latency</span><span class="val">218 ms</span><span class="sub">budget: 500 ms</span>
+        </div>
+        <div class="obs-stat">
+          <span class="lbl">Top fingerprint</span><span class="val" style="font-size:14px;font-family:'JetBrains Mono',monospace">a8c5aa7f3617</span><span class="sub">≈ Claude/Sonnet via fetch</span>
+        </div>
+        <div class="obs-stat">
+          <span class="lbl">5xx rate</span><span class="val" style="color:var(--green-600)">0.04%</span><span class="delta">▼ stable</span>
+        </div>
+      </div>
+      <div class="obs-table">
+        <div class="obs-row h"><div>Fingerprint</div><div>Route</div><div>p50</div><div>Status</div><div>n</div></div>
+        <div class="obs-row"><div class="fp">a8c5aa7f</div><div class="route">POST /v1/pay</div><div class="ms">142ms</div><div><span class="stat s2">202</span></div><div class="ms">412</div></div>
+        <div class="obs-row"><div class="fp">a8c5aa7f</div><div class="route">POST /v1/compliance/check</div><div class="ms">38ms</div><div><span class="stat s2">200</span></div><div class="ms">528</div></div>
+        <div class="obs-row"><div class="fp">a82384b0</div><div class="route">POST /v1/invoices</div><div class="ms">61ms</div><div><span class="stat s2">201</span></div><div class="ms">147</div></div>
+        <div class="obs-row"><div class="fp">ab180093</div><div class="route">GET /v1/transactions/…/events</div><div class="ms">12ms</div><div><span class="stat s2">200</span></div><div class="ms">89</div></div>
+        <div class="obs-row"><div class="fp">aa82c534</div><div class="route">POST /v1/auth/siwe/nonce</div><div class="ms">95ms</div><div><span class="stat s4">400</span></div><div class="ms">3</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cornertag">SLIDE 5 / 5 · SPEC + SIGNAL</div>
+</main>
+
+<script>
+// fade in SSE lines on load (simulates stream)
+window.addEventListener("load", () => {
+  const lines = document.querySelectorAll(".sse-line");
+  lines.forEach((l, i) => setTimeout(() => l.classList.add("on"), 250 + i * 220));
+});
+</script>
+
+</body>
+</html>

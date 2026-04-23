@@ -21,6 +21,7 @@
     "test:agent": "bash tests/curl-agent.sh"
   },
   "dependencies": {
+    "@asteasolutions/zod-to-openapi": "^7.3.0",
     "@noble/ed25519": "^2.1.0",
     "@noble/hashes": "^1.5.0",
     "@prisma/client": "^5.22.0",
@@ -29,6 +30,7 @@
     "react-dom": "^18.3.1",
     "siwe": "^3.0.0",
     "viem": "^2.21.0",
+    "yaml": "^2.8.3",
     "zod": "^3.23.8"
   },
   "devDependencies": {

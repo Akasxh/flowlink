@@ -8,6 +8,7 @@ import { ulid } from "@/lib/ulid";
 import { ADDRESS_REGEX, isTokenSupported } from "@/lib/chain";
 import { prisma } from "@/lib/prisma";
 import { canonicalize, lookup as idemLookup, save as idemSave } from "@/lib/idempotency";
+import { withAccessLog } from "@/lib/with-access-log";
 
 const createSchema = z.object({
   receiver_address: z.string().regex(ADDRESS_REGEX),
@@ -19,7 +20,7 @@ const createSchema = z.object({
 
 const DEFAULT_DUE_DAYS = 30;
 
-export async function POST(req: NextRequest) {
+async function postHandler(req: NextRequest) {
   const requestId = getOrMintRequestId(req);
   try {
     const principal = await authenticate(req);
@@ -137,7 +138,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-export async function GET(req: NextRequest) {
+async function getHandler(req: NextRequest) {
   const requestId = getOrMintRequestId(req);
   try {
     const principal = await authenticate(req);
@@ -173,3 +174,6 @@ export async function GET(req: NextRequest) {
     return problemFromUnknown(err, requestId);
   }
 }
+
+export const POST = withAccessLog(postHandler);
+export const GET = withAccessLog(getHandler);

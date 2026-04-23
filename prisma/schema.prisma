@@ -192,3 +192,22 @@ model ComplianceLog {
 
   @@index([address, createdAt])
 }
+
+// ── Agent observability ──────────────────────────────────────────────
+
+// Per-request access ledger. Written non-blocking by the withAccessLog wrapper.
+// `principal` is null for anonymous calls. `fingerprint` is a stable 12-char
+// sha256 prefix derived from User-Agent + Accept + Accept-Language.
+model AgentAccessLog {
+  id          String   @id @default(cuid())
+  fingerprint String
+  route       String
+  method      String
+  status      Int
+  latencyMs   Int
+  principal   String?
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([fingerprint, createdAt])
+}
