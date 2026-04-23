@@ -4,11 +4,15 @@
 // Supported methods:
 //   - initialize             → returns protocolVersion / capabilities / serverInfo
 //   - notifications/initialized → accept silently (no response)
-//   - tools/list             → 6 FlowLink tools (descriptions copied verbatim
-//                              from public/.well-known/mcp.json)
+//   - tools/list             → 10 FlowLink tools (6 v1 + 4 admin). Descriptions
+//                              copied verbatim from public/.well-known/mcp.json.
 //   - tools/call             → dispatch by name to handlers in mcp-tools.ts
 //
-// Hard cap: < 250 LOC. No framework imports — `route.ts` wires this into Next.
+// Admin tools (list/mint/revoke api keys, observability) carry an `admin: true`
+// flag so clients can render them as dev-only. The MCP wire transport already
+// authenticates via SIWE bearer; the flag is a hint, not a gate.
+//
+// Hard cap: < 300 LOC. No framework imports — `route.ts` wires this into Next.
 
 import { TOOL_HANDLERS, type ToolName } from "./mcp-tools";
 
@@ -47,11 +51,25 @@ export type JsonRpcResponse = JsonRpcSuccess | JsonRpcError;
 
 // MCP tool catalogue. Descriptions copied verbatim from
 // public/.well-known/mcp.json — keep these in sync.
+//
+// `admin: true` marks tools that wrap /api/admin/* (dev-only). Clients can
+// surface this flag in their UI; the MCP spec permits arbitrary annotation
+// fields on a Tool, and unknown clients ignore them.
 export type McpTool = {
   name: ToolName;
   description: string;
   inputSchema: { type: "object"; properties: Record<string, unknown>; required?: string[] };
+  admin?: boolean;
 };
+
+const ALL_API_KEY_SCOPES_ENUM = [
+  "invoice:read",
+  "invoice:write",
+  "pay:execute",
+  "receipt:read",
+  "compliance:check",
+  "reputation:read",
+] as const;
 
 export const MCP_TOOLS: readonly McpTool[] = [
   {
@@ -120,6 +138,60 @@ export const MCP_TOOLS: readonly McpTool[] = [
       required: ["address"],
     },
   },
+  {
+    name: "list_api_keys",
+    description: "List minted API keys for the local admin user (sanitized — no raw key, no hash). Dev-only. See /skills/admin.md.",
+    admin: true,
+    inputSchema: {
+      type: "object",
+      properties: {},
+    },
+  },
+  {
+    name: "mint_api_key",
+    description: "Create a fresh scoped API key. The raw key is returned ONCE — persist immediately. Dev-only. See /skills/admin.md.",
+    admin: true,
+    inputSchema: {
+      type: "object",
+      properties: {
+        name: { type: "string", description: "human label, 1..80 chars" },
+        scopes: {
+          type: "array",
+          items: { type: "string", enum: [...ALL_API_KEY_SCOPES_ENUM] },
+          minItems: 1,
+          description: "subset of the six FlowLink scopes",
+        },
+        env: { type: "string", enum: ["live", "test"], description: "default `test`" },
+      },
+      required: ["name", "scopes"],
+    },
+  },
+  {
+    name: "revoke_api_key",
+    description: "Revoke a previously minted API key by id. Idempotent. Dev-only. See /skills/admin.md.",
+    admin: true,
+    inputSchema: {
+      type: "object",
+      properties: { id: { type: "string", description: "ApiKey row id (e.g. ck_01HV...)" } },
+      required: ["id"],
+    },
+  },
+  {
+    name: "query_observability",
+    description: "Rolling /v1/* traffic summary: top fingerprints, latency p50/p95, status mix. Dev-only. See /skills/dashboard.md.",
+    admin: true,
+    inputSchema: {
+      type: "object",
+      properties: {
+        windowSec: {
+          type: "integer",
+          description: "window in seconds (default 300, max 86400)",
+          minimum: 1,
+          maximum: 86_400,
+        },
+      },
+    },
+  },
 ];
 
 function isToolName(name: string): name is ToolName {
@@ -138,9 +210,14 @@ function err(id: JsonRpcId, code: number, message: string, data?: unknown): Json
 
 // `principal` is the authenticated FlowLink Principal (or a synthetic stand-in
 // in tests). `null` is returned for notifications (one-way; no response sent).
+//
+// `adminTokenValid` is set by the route handler when the request also carried
+// a valid `X-Admin-Token` header. Tools flagged `admin: true` REQUIRE this —
+// SIWE auth alone is not enough to call admin operations (privilege escalation
+// fix, round-2 reviewer P1).
 export async function handleJsonRpc(
   message: unknown,
-  ctx: { principalSubject: string },
+  ctx: { principalSubject: string; adminTokenValid?: boolean },
 ): Promise<JsonRpcResponse | null> {
   if (!message || typeof message !== "object" || Array.isArray(message)) {
     return err(null, RPC_INVALID_REQUEST, "request must be a JSON object");
@@ -175,6 +252,17 @@ export async function handleJsonRpc(
         }
         if (!isToolName(params.name)) {
           return err(id, RPC_METHOD_NOT_FOUND, `unknown tool: ${params.name}`);
+        }
+        // Admin gate (round-2 reviewer P1): tools flagged `admin: true` require
+        // a valid X-Admin-Token header in addition to SIWE auth. Without this,
+        // any SIWE-authed agent could mint themselves an unrestricted API key.
+        const tool = MCP_TOOLS.find((t) => t.name === params.name);
+        if (tool?.admin && !ctx.adminTokenValid) {
+          return err(
+            id,
+            RPC_INVALID_PARAMS,
+            `admin tool '${params.name}' requires X-Admin-Token header on the MCP request`,
+          );
         }
         const args = (params.arguments ?? {}) as Record<string, unknown>;
         const handler = TOOL_HANDLERS[params.name];

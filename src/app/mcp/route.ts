@@ -13,9 +13,16 @@
 // Auth: Bearer token via authenticate() — 401 Problem+JSON when missing.
 
 import { NextRequest } from "next/server";
+import { timingSafeEqual } from "node:crypto";
 import { authenticate } from "@/lib/auth/middleware";
 import { problemJson, problemFromUnknown } from "@/lib/errors";
 import { getOrMintRequestId } from "@/lib/request-id";
+
+// Constant-time string compare to prevent admin-token timing attacks.
+function timingSafeEqualStr(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  return timingSafeEqual(Buffer.from(a), Buffer.from(b));
+}
 import {
   encodeSseComment,
   encodeSseFrame,
@@ -104,7 +111,20 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const response = await handleJsonRpc(parsed, { principalSubject: principal.subject });
+    // Admin-token check (round-2 reviewer P1 fix): tools flagged `admin: true`
+    // require BOTH a valid SIWE bearer AND a matching X-Admin-Token header.
+    // Compare in constant time to avoid token-prefix probing.
+    const adminTokenHdr = req.headers.get("x-admin-token") ?? "";
+    const adminTokenEnv = process.env.ADMIN_TOKEN ?? "";
+    const adminTokenValid =
+      adminTokenEnv.length > 0 &&
+      adminTokenHdr.length === adminTokenEnv.length &&
+      timingSafeEqualStr(adminTokenHdr, adminTokenEnv);
+
+    const response = await handleJsonRpc(parsed, {
+      principalSubject: principal.subject,
+      adminTokenValid,
+    });
 
     // Notification → no response body
     if (response === null) {

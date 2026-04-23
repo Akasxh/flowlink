@@ -6,7 +6,7 @@
 <title>FlowLink · Live Duel</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#fafbfa;
@@ -18,6 +18,7 @@
     --ink-3:#7a8a91;
     --ink-4:#aab6bb;
     --good:#0c6363;
+    --good-strong:#085050;
     --good-soft:#e6f1f0;
     --bad:#a93547;
     --bad-soft:#fbeef0;
@@ -30,217 +31,227 @@
     color:var(--ink-2);min-height:100%;-webkit-font-smoothing:antialiased;
     overflow-y:auto;overflow-x:hidden;
   }
-  body{padding:24px;display:flex;flex-direction:column;gap:18px;align-items:center}
+  body{padding:32px;display:flex;flex-direction:column;gap:28px;align-items:center}
 
   .page{
-    width:100%;max-width:1480px;display:flex;flex-direction:column;gap:18px;
+    width:100%;max-width:1800px;display:flex;flex-direction:column;gap:28px;
   }
 
   /* slim header */
   .head{
     display:flex;align-items:center;justify-content:space-between;
-    padding:0 4px;
+    padding:0 8px;
   }
-  .brand{display:flex;align-items:center;gap:10px}
+  .brand{display:flex;align-items:center;gap:14px}
   .brand-mark{
-    width:26px;height:26px;border-radius:7px;
+    width:36px;height:36px;border-radius:9px;
     background:linear-gradient(135deg,#1da0a0,#0c6363);
   }
-  .brand-word{font:700 16px/1 Inter;color:var(--ink);letter-spacing:-.01em}
+  .brand-word{font:800 22px/1 Inter;color:var(--ink);letter-spacing:-.015em}
   .head-meta{
-    font:500 11px/1 "JetBrains Mono",monospace;color:var(--ink-3);
-    display:flex;align-items:center;gap:14px;letter-spacing:.04em;
+    font:600 13px/1 "JetBrains Mono",monospace;color:var(--ink-3);
+    display:flex;align-items:center;gap:18px;letter-spacing:.04em;
   }
   .head-meta .live{
-    display:inline-flex;align-items:center;gap:6px;color:var(--good);
-    font-weight:700;font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+    display:inline-flex;align-items:center;gap:8px;color:var(--good);
+    font-weight:700;font-size:12px;letter-spacing:.14em;text-transform:uppercase;
   }
   .head-meta .live::before{
-    content:"";width:6px;height:6px;border-radius:50%;background:var(--good);
+    content:"";width:8px;height:8px;border-radius:50%;background:var(--good);
     animation:pulse 1.6s infinite;
   }
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
-  /* hero — compact */
+  /* big hero */
   .hero{
-    background:var(--paper);border:1px solid var(--line);border-radius:16px;
-    padding:28px 32px;display:flex;align-items:center;justify-content:space-between;gap:32px;
+    background:var(--paper);border:1px solid var(--line);border-radius:20px;
+    padding:40px 52px;display:flex;align-items:center;justify-content:space-between;gap:48px;
   }
-  .hero-l{flex:1;display:flex;flex-direction:column;gap:6px}
+  .hero-l{flex:1;display:flex;flex-direction:column;gap:14px}
   .hero h1{
-    font:700 32px/1.15 Inter;color:var(--ink);letter-spacing:-.02em;
+    font:800 clamp(40px,4.2vw,68px)/1.05 Inter;color:var(--ink);letter-spacing:-.025em;
   }
   .hero h1 .good{color:var(--good)}
   .hero h1 .bad{color:var(--bad)}
-  .hero p{font:400 14px/1.5 Inter;color:var(--ink-3);max-width:64ch}
+  .hero p{font:500 18px/1.55 Inter;color:var(--ink-2);max-width:64ch}
   .hero p code{
     font-family:"JetBrains Mono",monospace;background:var(--good-soft);color:var(--good);
-    padding:1px 5px;border-radius:4px;font-size:.92em;
+    padding:2px 7px;border-radius:5px;font-size:.92em;font-weight:600;
   }
   .runbtn{
     appearance:none;border:0;cursor:pointer;flex:none;
-    background:var(--good);color:#fff;font:600 13px/1 Inter;
-    padding:14px 22px;border-radius:10px;display:inline-flex;align-items:center;gap:9px;
-    transition:opacity .15s,transform .12s;
+    background:var(--good);color:#fff;font:700 16px/1 Inter;
+    padding:20px 32px;border-radius:14px;display:inline-flex;align-items:center;gap:11px;
+    transition:opacity .15s,transform .12s,background .15s;
+    box-shadow:0 6px 20px -6px rgba(12,99,99,.45);
   }
-  .runbtn:hover{opacity:.92;transform:translateY(-1px)}
+  .runbtn:hover{background:var(--good-strong);transform:translateY(-1px);box-shadow:0 10px 28px -8px rgba(12,99,99,.6)}
   .runbtn:disabled{opacity:.45;cursor:default;transform:none}
-  .runbtn svg{width:11px;height:11px}
+  .runbtn svg{width:13px;height:13px}
 
-  /* duel: two big panels side by side */
+  /* duel: two big panels side by side, equal heights */
   .duel{
-    display:grid;grid-template-columns:1fr 1fr;gap:18px;
+    display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:stretch;
   }
   .panel{
-    background:var(--paper);border:1px solid var(--line);border-radius:16px;
-    overflow:hidden;display:flex;flex-direction:column;
+    background:var(--paper);border:1px solid var(--line);border-radius:20px;
+    overflow:hidden;display:flex;flex-direction:column;min-height:680px;
+    transition:border-color .4s,box-shadow .4s;
   }
+  .panel.A.done{border-color:var(--good);box-shadow:0 12px 40px -16px rgba(12,99,99,.25)}
+  .panel.B.done{border-color:var(--bad);box-shadow:0 12px 40px -16px rgba(169,53,71,.18)}
   .panel-head{
-    padding:18px 22px;border-bottom:1px solid var(--line);
-    display:flex;align-items:center;gap:12px;
+    padding:28px 32px 22px;border-bottom:1px solid var(--line);
+    display:flex;align-items:center;gap:16px;transition:background .4s;
   }
+  .panel.A.done .panel-head{background:linear-gradient(180deg,var(--good-soft) 0%,#fff 100%)}
+  .panel.B.done .panel-head{background:linear-gradient(180deg,var(--bad-soft) 0%,#fff 100%)}
   .pill{
-    font:600 10px/1 "JetBrains Mono",monospace;letter-spacing:.14em;text-transform:uppercase;
-    padding:5px 9px;border-radius:5px;
+    font:700 11.5px/1 "JetBrains Mono",monospace;letter-spacing:.16em;text-transform:uppercase;
+    padding:7px 12px;border-radius:6px;
   }
   .pill.good{background:var(--good-soft);color:var(--good)}
   .pill.bad{background:var(--bad-soft);color:var(--bad)}
-  .panel-title{font:700 14px/1.2 Inter;color:var(--ink);flex:1}
+  .panel-title{font:800 22px/1.2 Inter;color:var(--ink);flex:1;letter-spacing:-.01em}
   .panel-title .sub{
-    display:block;font:400 11px/1.3 "JetBrains Mono",monospace;
-    color:var(--ink-3);margin-top:3px;letter-spacing:.02em;
+    display:block;font:500 13px/1.3 "JetBrains Mono",monospace;
+    color:var(--ink-3);margin-top:5px;letter-spacing:.02em;font-weight:600;
   }
   .status{
-    width:8px;height:8px;border-radius:50%;background:var(--ink-4);transition:background .25s;
+    width:16px;height:16px;border-radius:50%;background:var(--ink-4);transition:background .25s,box-shadow .25s;
   }
-  .status.run{background:#d4a13a;animation:pulse 1.4s infinite}
-  .status.win{background:var(--good)}
-  .status.lose{background:var(--bad)}
+  .status.run{background:#d4a13a;box-shadow:0 0 0 7px rgba(212,161,58,.22);animation:pulse 1.4s infinite}
+  .status.win{background:var(--good);box-shadow:0 0 0 7px rgba(12,99,99,.2)}
+  .status.lose{background:var(--bad);box-shadow:0 0 0 7px rgba(169,53,71,.2)}
 
   /* metrics row */
   .metrics{
     display:grid;grid-template-columns:repeat(3,1fr);
     border-bottom:1px solid var(--line);
   }
-  .metric{padding:14px 22px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:2px}
+  .metric{padding:22px 32px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:4px}
   .metric:last-child{border-right:0}
-  .metric .k{font:600 9.5px/1 "JetBrains Mono",monospace;color:var(--ink-3);letter-spacing:.12em;text-transform:uppercase}
-  .metric .v{font:700 22px/1 Inter;color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+  .metric .k{font:700 11px/1 "JetBrains Mono",monospace;color:var(--ink-3);letter-spacing:.14em;text-transform:uppercase}
+  .metric .v{font:800 34px/1 Inter;color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
 
   /* progress dots */
-  .progress{padding:12px 22px;display:flex;align-items:center;gap:4px;border-bottom:1px solid var(--line)}
-  .progress .dot{width:6px;height:6px;border-radius:50%;background:var(--line-2);flex:none;transition:background .25s,transform .25s}
+  .progress{padding:18px 32px;display:flex;align-items:center;gap:5px;border-bottom:1px solid var(--line)}
+  .progress .dot{width:8px;height:8px;border-radius:50%;background:var(--line-2);flex:none;transition:background .25s,transform .25s}
   .panel.A .progress .dot.done{background:var(--good)}
   .panel.B .progress .dot.done{background:var(--bad)}
-  .progress .dot.now{transform:scale(1.5);background:#d4a13a}
+  .progress .dot.now{transform:scale(1.7);background:#d4a13a}
   .progress .grow{flex:1;height:1px;background:var(--line)}
 
   /* reasoning + action */
-  .body{padding:18px 22px;display:flex;flex-direction:column;gap:12px;flex:1}
+  .body{padding:24px 32px 28px;display:flex;flex-direction:column;gap:18px;flex:1}
   .think{
-    background:var(--bg);border:1px solid var(--line);border-radius:10px;
-    padding:14px 16px;display:flex;flex-direction:column;gap:6px;min-height:108px;
+    background:var(--bg);border:1px solid var(--line);border-radius:14px;
+    padding:20px 24px;display:flex;flex-direction:column;gap:10px;min-height:160px;
   }
   .think .head-row{
-    display:flex;align-items:center;gap:8px;
-    font:600 9.5px/1 "JetBrains Mono",monospace;color:var(--ink-3);letter-spacing:.12em;text-transform:uppercase;
+    display:flex;align-items:center;gap:10px;
+    font:700 11px/1 "JetBrains Mono",monospace;color:var(--ink-3);letter-spacing:.14em;text-transform:uppercase;
   }
   .think .head-row .num{
     background:var(--paper);border:1px solid var(--line);
-    padding:2px 6px;border-radius:4px;color:var(--ink-2);font-size:9.5px;
+    padding:3px 8px;border-radius:5px;color:var(--ink-2);font-size:11px;
   }
   .think .text{
-    font:400 14px/1.5 Inter;color:var(--ink);
+    font:500 19px/1.5 Inter;color:var(--ink);letter-spacing:-.005em;
   }
   .think .text.fade{animation:fade .35s ease}
-  @keyframes fade{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
   .think .next{
-    font:400 12px/1.4 Inter;color:var(--ink-3);
-    padding-top:6px;border-top:1px dashed var(--line);
-    display:flex;gap:6px;
+    font:500 14px/1.45 Inter;color:var(--ink-3);
+    padding-top:10px;border-top:1px dashed var(--line);
+    display:flex;gap:8px;
   }
-  .think .next b{color:var(--ink-2);font-weight:500}
+  .think .next b{color:var(--ink-2);font-weight:600}
 
   .term{
-    background:var(--terminal);color:#cfe4e1;border-radius:10px;overflow:hidden;
-    font:500 11.5px/1.5 "JetBrains Mono",monospace;
+    background:var(--terminal);color:#cfe4e1;border-radius:14px;overflow:hidden;
+    font:600 13px/1.55 "JetBrains Mono",monospace;
   }
   .term .head{
-    padding:9px 14px;background:rgba(0,0,0,.22);
-    font:600 9.5px/1 "JetBrains Mono",monospace;color:rgba(255,255,255,.55);
-    letter-spacing:.12em;text-transform:uppercase;
+    padding:11px 18px;background:rgba(0,0,0,.22);
+    font:700 10.5px/1 "JetBrains Mono",monospace;color:rgba(255,255,255,.55);
+    letter-spacing:.14em;text-transform:uppercase;
   }
-  .term .b{padding:12px 16px;display:flex;flex-direction:column;gap:6px}
+  .term .b{padding:14px 20px;display:flex;flex-direction:column;gap:8px}
   .term .cmd{color:#7ce0e0;word-break:break-all}
   .panel.B .term .cmd{color:#ffbec9}
-  .term .res{color:rgba(207,228,225,.78);font-size:11px}
-  .panel.B .term .res{color:rgba(240,214,218,.78)}
+  .term .res{color:rgba(207,228,225,.82);font-size:12px}
+  .panel.B .term .res{color:rgba(240,214,218,.82)}
   .term .res .stat{
-    display:inline-block;padding:1px 6px;border-radius:3px;margin-right:6px;
-    font-size:10px;font-weight:700;color:#fff;
+    display:inline-block;padding:2px 7px;border-radius:4px;margin-right:7px;
+    font-size:11px;font-weight:700;color:#fff;
   }
   .term .res .stat.s2{background:#21703f}
   .term .res .stat.s4{background:#a93547}
 
-  /* outcome footer */
+  /* outcome footer — bold and assertive when done */
   .foot{
-    padding:14px 22px;border-top:1px solid var(--line);
-    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:22px 32px;border-top:1px solid var(--line);
+    display:flex;align-items:center;justify-content:space-between;gap:14px;
+    transition:background .4s;
   }
+  .panel.A.done .foot{background:var(--good-soft)}
+  .panel.B.done .foot{background:var(--bad-soft)}
   .outcome-tag{
-    font:700 11px/1 Inter;letter-spacing:.06em;text-transform:uppercase;
-    padding:6px 10px;border-radius:6px;
+    font:900 18px/1 Inter;letter-spacing:.12em;text-transform:uppercase;
+    padding:13px 20px;border-radius:9px;display:inline-flex;align-items:center;gap:8px;
+    box-shadow:0 4px 12px -4px rgba(0,0,0,.08);
   }
-  .outcome-tag.pending{background:var(--bg);color:var(--ink-3);border:1px solid var(--line)}
-  .outcome-tag.win{background:var(--good-soft);color:var(--good)}
-  .outcome-tag.lose{background:var(--bad-soft);color:var(--bad)}
-  .foot .line{font:400 12px/1.4 Inter;color:var(--ink-3);text-align:right;max-width:50ch}
+  .outcome-tag.pending{background:var(--bg);color:var(--ink-3);border:1px solid var(--line);font-weight:700;font-size:13px;box-shadow:none;letter-spacing:.08em}
+  .outcome-tag.win{background:var(--good);color:#fff;box-shadow:0 6px 18px -6px rgba(12,99,99,.5)}
+  .outcome-tag.lose{background:var(--bad);color:#fff;box-shadow:0 6px 18px -6px rgba(169,53,71,.45)}
+  .foot .line{font:500 13px/1.45 Inter;color:var(--ink-2);text-align:right;max-width:60ch}
 
-  /* numbers strip — single row */
+  /* numbers strip — single row with BIG numbers */
   .numbers{
-    background:var(--paper);border:1px solid var(--line);border-radius:16px;
+    background:var(--paper);border:1px solid var(--line);border-radius:20px;
     display:grid;grid-template-columns:repeat(4,1fr);
   }
   .ncell{
-    padding:18px 24px;border-right:1px solid var(--line);
-    display:flex;flex-direction:column;gap:6px;
+    padding:32px 36px;border-right:1px solid var(--line);
+    display:flex;flex-direction:column;gap:14px;
   }
   .ncell:last-child{border-right:0}
-  .ncell .nk{font:600 10px/1 "JetBrains Mono",monospace;color:var(--ink-3);letter-spacing:.12em;text-transform:uppercase}
-  .ncell .nrow{display:flex;align-items:baseline;gap:10px}
-  .ncell .va{font:700 26px/1 Inter;color:var(--good);font-variant-numeric:tabular-nums;letter-spacing:-.015em}
-  .ncell .vb{font:600 14px/1 Inter;color:var(--bad);font-variant-numeric:tabular-nums;text-decoration:line-through;text-decoration-color:rgba(169,53,71,.4)}
-  .ncell .delta{font:600 11px/1 "JetBrains Mono",monospace;color:var(--good);background:var(--good-soft);padding:3px 7px;border-radius:4px}
+  .ncell .nk{font:700 11.5px/1 "JetBrains Mono",monospace;color:var(--ink-3);letter-spacing:.14em;text-transform:uppercase}
+  .ncell .nrow{display:flex;align-items:baseline;gap:12px}
+  .ncell .va{font:900 56px/1 Inter;color:var(--good);font-variant-numeric:tabular-nums;letter-spacing:-.03em;flex:none}
+  .ncell .vb{font:700 22px/1 Inter;color:var(--bad);font-variant-numeric:tabular-nums;text-decoration:line-through;text-decoration-color:rgba(169,53,71,.4);flex:none}
+  .ncell .delta{font:700 12px/1 "JetBrains Mono",monospace;color:var(--good);background:var(--good-soft);padding:6px 10px;border-radius:6px;align-self:flex-start;letter-spacing:.04em}
 
-  /* quote — single line */
+  /* quote — single line, bigger */
   .quote-card{
-    background:var(--paper);border:1px solid var(--line);border-radius:16px;
-    padding:22px 32px;display:flex;align-items:center;gap:24px;justify-content:space-between;
+    background:var(--paper);border:1px solid var(--line);border-radius:20px;
+    padding:36px 48px;display:flex;align-items:center;gap:32px;justify-content:space-between;
   }
   .quote-card .q{
-    font:500 15px/1.5 Inter;color:var(--ink);max-width:80ch;
+    font:500 20px/1.5 Inter;color:var(--ink);max-width:90ch;letter-spacing:-.005em;
   }
   .quote-card .q b{color:var(--good);font-weight:700}
   .quote-card .q .att{
-    display:block;margin-top:6px;font:400 11px/1 "JetBrains Mono",monospace;
-    color:var(--ink-3);letter-spacing:.04em;
+    display:block;margin-top:10px;font:600 12px/1 "JetBrains Mono",monospace;
+    color:var(--ink-3);letter-spacing:.06em;
   }
-  .quote-card .links{display:flex;gap:8px;flex:none}
+  .quote-card .links{display:flex;gap:10px;flex:none}
   .quote-card .links a{
     background:var(--bg);border:1px solid var(--line);color:var(--ink-2);
-    padding:8px 12px;border-radius:8px;text-decoration:none;
-    font:600 11px/1 "JetBrains Mono",monospace;letter-spacing:.04em;
-    transition:background .15s;
+    padding:11px 16px;border-radius:10px;text-decoration:none;
+    font:700 12px/1 "JetBrains Mono",monospace;letter-spacing:.06em;
+    transition:background .15s,color .15s,border-color .15s;
   }
   .quote-card .links a:hover{background:var(--good-soft);color:var(--good);border-color:var(--good)}
 
-  @media (max-width:1100px){
+  @media (max-width:1280px){
     .duel{grid-template-columns:1fr}
-    .hero{flex-direction:column;align-items:flex-start;gap:18px}
+    .hero{flex-direction:column;align-items:flex-start;gap:24px;padding:36px 32px}
     .numbers{grid-template-columns:1fr 1fr}
     .ncell:nth-child(2){border-right:0}
     .ncell:nth-child(-n+2){border-bottom:1px solid var(--line)}
-    .quote-card{flex-direction:column;align-items:flex-start;gap:16px}
+    .quote-card{flex-direction:column;align-items:flex-start;gap:20px;padding:28px 32px}
   }
 </style>
 </head>
@@ -260,7 +271,7 @@
     </div>
   </div>
 
-  <!-- compact hero -->
+  <!-- big hero -->
   <div class="hero">
     <div class="hero-l">
       <h1>Two agents. One task. <span class="good">Read the markdown</span> or <span class="bad">scrape the HTML</span>.</h1>
@@ -346,23 +357,27 @@
   <div class="numbers">
     <div class="ncell">
       <span class="nk">Tool calls</span>
-      <div class="nrow"><span class="va">8</span><span class="vb">16</span><span class="delta">2× fewer</span></div>
+      <div class="nrow"><span class="va">8</span><span class="vb">16</span></div>
+      <span class="delta">2× fewer</span>
     </div>
     <div class="ncell">
       <span class="nk">Bytes fetched</span>
-      <div class="nrow"><span class="va">9.2 KB</span><span class="vb">180 KB</span><span class="delta">20× lighter</span></div>
+      <div class="nrow"><span class="va">9.2<span style="font-size:.6em;color:var(--ink-3);font-weight:700;margin-left:4px">KB</span></span><span class="vb">180 KB</span></div>
+      <span class="delta">20× lighter</span>
     </div>
     <div class="ncell">
       <span class="nk">Wall clock</span>
-      <div class="nrow"><span class="va">56 s</span><span class="vb">106 s</span><span class="delta">2× faster</span></div>
+      <div class="nrow"><span class="va">56<span style="font-size:.6em;color:var(--ink-3);font-weight:700;margin-left:4px">s</span></span><span class="vb">106 s</span></div>
+      <span class="delta">2× faster</span>
     </div>
     <div class="ncell">
       <span class="nk">Outcome</span>
-      <div class="nrow"><span class="va" style="font-size:22px">SETTLED</span><span class="vb" style="font-size:13px">BLOCKED</span></div>
+      <div class="nrow"><span class="va" style="font-size:36px">SETTLED</span><span class="vb" style="font-size:18px">BLOCKED</span></div>
+      <span class="delta">100% vs 0%</span>
     </div>
   </div>
 
-  <!-- single-line quote -->
+  <!-- quote -->
   <div class="quote-card">
     <div class="q">
       "An agent allowed to read <b>/skills/pay.md</b> would complete this in ~2 calls; a browser-only agent burns 16 calls to discover that there is nothing to discover."
@@ -644,8 +659,8 @@ const B = {
 ;
 
 const $ = id => document.getElementById(id);
-const PER_STEP = 2200;
-const GAP = 600;
+const PER_STEP = 1700;
+const GAP = 500;
 
 function fmtBytes(n){
   if (n < 1024) return n + " B";
@@ -714,6 +729,8 @@ async function play(data, side){
   $(side+"-line").textContent = data.outcome_summary;
   $(side+"-bytes").textContent = fmtBytes(data.metrics.bytes_fetched_total ?? data.metrics.bytes_fetched_total_estimate ?? bytes);
   $(side+"-calls").textContent = String(data.metrics.tool_calls);
+  // Light up the whole panel
+  document.querySelector(".panel." + side).classList.add("done");
 }
 
 let running = false;
@@ -725,6 +742,7 @@ async function run(){
     $(s+"-step").textContent = "0/" + (s==="A" ? A.steps.length : B.steps.length);
     $(s+"-stat").className = "status";
     $(s+"-think").textContent = "Press Replay to start.";
+    document.querySelector(".panel." + s).classList.remove("done");
   }
   await Promise.all([play(A,"A"), play(B,"B")]);
   $("runBtn").disabled = false; running = false;

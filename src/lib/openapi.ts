@@ -33,6 +33,7 @@ const err = (description: string) => ({
   content: { "application/problem+json": { schema: v1.problemJsonResponse } },
 });
 const bearer = [{ bearerAuth: [] as string[] }];
+const admin = [{ adminToken: [] as string[] }];
 const idemHeaders = z.object({ "Idempotency-Key": z.string() });
 
 // Bootstrap: register reusable components + every v1 path.
@@ -44,11 +45,20 @@ for (const [name, schema] of [
   ["PayRequest", v1.payRequest], ["PayResponse", v1.payResponse],
   ["TransactionResponse", v1.transactionResponse], ["ReceiptResponse", v1.receiptResponse],
   ["ReputationResponse", v1.reputationResponse], ["ProblemJsonResponse", v1.problemJsonResponse],
+  ["ApiKeyListResponse", v1.apiKeyListResponse], ["ApiKeyMintRequest", v1.apiKeyMintRequest],
+  ["ApiKeyMintResponse", v1.apiKeyMintResponse], ["ApiKeyRevokeRequest", v1.apiKeyRevokeRequest],
+  ["ObservabilityResponse", v1.observabilityResponse],
 ] as const) registry.register(name, schema);
 
 registry.registerComponent("securitySchemes", "bearerAuth", {
   type: "http", scheme: "bearer", bearerFormat: "JWT",
   description: "Access token issued by POST /v1/auth/siwe/verify.",
+});
+
+registry.registerComponent("securitySchemes", "adminToken", {
+  type: "apiKey", in: "header", name: "X-Admin-Token",
+  description:
+    "Shared admin secret matched against the ADMIN_TOKEN env var. Gates the /api/admin/* surface. Replace with scoped sessions in v0.3.",
 });
 
 // Auth — SIWE
@@ -217,6 +227,66 @@ registerRoute("get", "/v1/receipts/{id}", {
     401: err("Auth required."),
     403: err("Insufficient scope."),
     404: err("Receipt not found."),
+  },
+});
+
+// Admin — API keys (UI helper surface, gated by X-Admin-Token; not part of /v1/*)
+registerRoute("get", "/api/admin/keys", {
+  summary: "List API keys for the admin user",
+  tags: ["admin"],
+  security: admin,
+  responses: {
+    200: ok("API key list.", v1.apiKeyListResponse),
+    401: err("Missing or invalid X-Admin-Token."),
+    500: err("Admin disabled (ADMIN_TOKEN env var unset)."),
+  },
+});
+
+registerRoute("post", "/api/admin/keys", {
+  summary: "Mint a new API key (raw key returned ONCE)",
+  tags: ["admin"],
+  security: admin,
+  request: reqBody(v1.apiKeyMintRequest),
+  responses: {
+    201: ok("Key minted. The rawKey field is shown ONCE — store it immediately.", v1.apiKeyMintResponse),
+    400: err("Validation error."),
+    401: err("Missing or invalid X-Admin-Token."),
+    500: err("Admin disabled (ADMIN_TOKEN env var unset)."),
+  },
+});
+
+registerRoute("delete", "/api/admin/keys", {
+  summary: "Revoke an API key",
+  tags: ["admin"],
+  security: admin,
+  request: reqBody(v1.apiKeyRevokeRequest),
+  responses: {
+    204: { description: "Revoked." },
+    400: err("Validation error."),
+    401: err("Missing or invalid X-Admin-Token."),
+    404: err("Key not found for this admin user."),
+    500: err("Admin disabled (ADMIN_TOKEN env var unset)."),
+  },
+});
+
+// Admin — observability
+registerRoute("get", "/api/admin/observability", {
+  summary: "Latency + status summary for the agent-facing surface",
+  tags: ["admin"],
+  security: admin,
+  request: {
+    query: z.object({
+      window: z
+        .number()
+        .int()
+        .optional()
+        .openapi({ description: "Lookback window in seconds. Defaults to 300, capped at 86400.", example: 300 }),
+    }),
+  },
+  responses: {
+    200: ok("Latency / status summary for the window.", v1.observabilityResponse),
+    401: err("Missing or invalid X-Admin-Token."),
+    500: err("Admin disabled (ADMIN_TOKEN env var unset)."),
   },
 });
 

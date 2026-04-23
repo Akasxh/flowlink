@@ -56,6 +56,30 @@
       "name": "get_reputation",
       "description": "Query the counterparty reputation score for a wallet address. See /skills/reputation.md.",
       "description_url": "https://flowlink.ink/skills/reputation.md"
+    },
+    {
+      "name": "list_api_keys",
+      "description": "List minted API keys for the local admin user (sanitized — no raw key, no hash). Dev-only. See /skills/admin.md.",
+      "description_url": "https://flowlink.ink/skills/admin.md",
+      "admin": true
+    },
+    {
+      "name": "mint_api_key",
+      "description": "Create a fresh scoped API key. The raw key is returned ONCE — persist immediately. Dev-only. See /skills/admin.md.",
+      "description_url": "https://flowlink.ink/skills/admin.md",
+      "admin": true
+    },
+    {
+      "name": "revoke_api_key",
+      "description": "Revoke a previously minted API key by id. Idempotent. Dev-only. See /skills/admin.md.",
+      "description_url": "https://flowlink.ink/skills/admin.md",
+      "admin": true
+    },
+    {
+      "name": "query_observability",
+      "description": "Rolling /v1/* traffic summary: top fingerprints, latency p50/p95, status mix. Dev-only. See /skills/dashboard.md.",
+      "description_url": "https://flowlink.ink/skills/dashboard.md",
+      "admin": true
     }
   ]
 }

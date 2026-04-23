@@ -36,14 +36,14 @@ describe("MCP handleJsonRpc — initialize", () => {
 });
 
 describe("MCP handleJsonRpc — tools/list", () => {
-  it("returns the 6 FlowLink tools", async () => {
+  it("returns the 10 FlowLink tools (6 v1 + 4 admin)", async () => {
     const res = await handleJsonRpc(
       { jsonrpc: "2.0", id: "abc", method: "tools/list" },
       CTX,
     );
     if (!res || !("result" in res)) throw new Error("expected success");
-    const result = res.result as { tools: Array<{ name: string; description: string; inputSchema: unknown }> };
-    expect(result.tools).toHaveLength(6);
+    const result = res.result as { tools: Array<{ name: string; description: string; inputSchema: unknown; admin?: boolean }> };
+    expect(result.tools).toHaveLength(10);
     const names = result.tools.map((t) => t.name).sort();
     expect(names).toEqual([
       "check_sanctions",
@@ -51,22 +51,39 @@ describe("MCP handleJsonRpc — tools/list", () => {
       "get_invoice",
       "get_receipt",
       "get_reputation",
+      "list_api_keys",
+      "mint_api_key",
       "pay_invoice",
+      "query_observability",
+      "revoke_api_key",
     ]);
     for (const tool of result.tools) {
       expect(tool.description).toMatch(/See \/skills\//);
       expect(tool.inputSchema).toHaveProperty("type", "object");
       expect(tool.inputSchema).toHaveProperty("properties");
     }
+    // 4 admin-flagged tools
+    const adminTools = result.tools.filter((t) => t.admin === true).map((t) => t.name).sort();
+    expect(adminTools).toEqual(["list_api_keys", "mint_api_key", "query_observability", "revoke_api_key"]);
   });
 
   it("MCP_TOOLS catalogue is internally consistent", () => {
-    expect(MCP_TOOLS).toHaveLength(6);
+    expect(MCP_TOOLS).toHaveLength(10);
     for (const t of MCP_TOOLS) {
       expect(typeof t.name).toBe("string");
       expect(t.description.length).toBeGreaterThan(10);
       expect(t.inputSchema.type).toBe("object");
     }
+  });
+
+  it("admin tools require adminTokenValid in ctx (P1 reviewer fix)", async () => {
+    // Without adminTokenValid → tools/call on admin tool returns RPC_INVALID_PARAMS
+    const res = await handleJsonRpc(
+      { jsonrpc: "2.0", id: "x", method: "tools/call", params: { name: "list_api_keys", arguments: {} } },
+      CTX, // no adminTokenValid
+    );
+    if (!res || !("error" in res)) throw new Error("expected RPC error");
+    expect(res.error.message).toMatch(/admin tool.*requires X-Admin-Token/);
   });
 });
 

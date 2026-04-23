@@ -237,6 +237,120 @@ export const reputationResponse = z
   })
   .openapi("ReputationResponse");
 
+// ---- Admin: API keys ----
+// Mirrors src/app/api/admin/keys/route.ts. The admin surface lives at
+// /api/admin/* (NOT /v1/*) and is gated by the X-Admin-Token header.
+
+const apiKeyScopeSchema = z
+  .enum([
+    "invoice:read",
+    "invoice:write",
+    "pay:execute",
+    "receipt:read",
+    "compliance:check",
+    "reputation:read",
+  ] as const)
+  .openapi({ description: "Capability granted to the API key.", example: "invoice:read" });
+
+const apiKeyEnvSchema = z
+  .enum(["live", "test"] as const)
+  .openapi({ description: "Issuance environment. Test keys never touch mainnet.", example: "test" });
+
+export const apiKeyListResponse = z
+  .object({
+    data: z.array(
+      z
+        .object({
+          id: z.string().openapi({ example: "ak_01J..." }),
+          name: z.string().openapi({ example: "ci-bot" }),
+          prefix: z
+            .string()
+            .openapi({ description: "Public, non-secret key prefix.", example: "flk_test_abc123" }),
+          scopes: z.array(apiKeyScopeSchema),
+          env: apiKeyEnvSchema,
+          created_at: isoDate,
+          last_used_at: isoDate.nullable(),
+          revoked_at: isoDate.nullable(),
+          expires_at: isoDate.nullable(),
+        })
+        .openapi("ApiKeySummary"),
+    ),
+    count: z.number().int(),
+  })
+  .openapi("ApiKeyListResponse");
+
+export const apiKeyMintRequest = z
+  .object({
+    name: z.string().trim().min(1).max(80).openapi({ example: "ci-bot" }),
+    scopes: z.array(apiKeyScopeSchema).min(1),
+    env: apiKeyEnvSchema.openapi({
+      description: "Optional. Defaults to 'test' when omitted.",
+      example: "test",
+    }),
+  })
+  .openapi("ApiKeyMintRequest");
+
+export const apiKeyMintResponse = z
+  .object({
+    id: z.string().openapi({ example: "ak_01J..." }),
+    prefix: z.string().openapi({ example: "flk_test_abc123" }),
+    scopes: z.array(apiKeyScopeSchema),
+    env: apiKeyEnvSchema,
+    rawKey: z
+      .string()
+      .openapi({
+        description:
+          "The full secret key. Shown ONCE in this response and never retrievable again — store it immediately.",
+        example: "flk_test_abc123.secret_redacted",
+      }),
+  })
+  .openapi("ApiKeyMintResponse");
+
+export const apiKeyRevokeRequest = z
+  .object({ id: z.string().min(1).openapi({ example: "ak_01J..." }) })
+  .openapi("ApiKeyRevokeRequest");
+
+// ---- Admin: observability ----
+// Mirrors src/lib/access-log.ts::Summary, returned by GET /api/admin/observability.
+export const observabilityResponse = z
+  .object({
+    windowSec: z.number().int().openapi({ example: 300 }),
+    totalCount: z.number().int(),
+    p50: z.number().openapi({ description: "Median latency, milliseconds.", example: 42 }),
+    p95: z
+      .number()
+      .openapi({ description: "95th-percentile latency, milliseconds.", example: 180 }),
+    fivexxRate: z
+      .number()
+      .openapi({ description: "Fraction of responses with status >= 500, in [0, 1].", example: 0.0 }),
+    topFingerprints: z.array(
+      z.object({
+        fingerprint: z
+          .string()
+          .openapi({ description: "Stable hash of the calling key/principal.", example: "fp_abc123" }),
+        count: z.number().int(),
+      }),
+    ),
+    statusBreakdown: z.array(
+      z.object({ status: z.number().int().openapi({ example: 200 }), count: z.number().int() }),
+    ),
+    routes: z.array(
+      z
+        .object({
+          fingerprint: z.string(),
+          route: z.string().openapi({ example: "/v1/invoices" }),
+          method: z.string().openapi({ example: "POST" }),
+          p50: z.number(),
+          p95: z.number(),
+          count: z.number().int(),
+          topStatus: z.number().int().openapi({ example: 200 }),
+        })
+        .openapi("RouteStat"),
+    ),
+    generatedAt: isoDate,
+  })
+  .openapi("ObservabilityResponse");
+
 // ---- RFC 9457 Problem+JSON envelope ----
 // Mirrors the body returned by src/lib/errors.ts::problemJson.
 export const problemJsonResponse = z

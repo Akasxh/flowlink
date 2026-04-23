@@ -1,0 +1,289 @@
+{
+  "$schema": "https://flowlink.ink/schemas/sitemap-agent.v1.json",
+  "version": "1.0.0",
+  "generated_at": "2026-04-22T00:00:00Z",
+  "site": "https://flowlink.ink",
+  "categories": [
+    "skill",
+    "manifest",
+    "signal",
+    "page-spec",
+    "human-page",
+    "api"
+  ],
+  "entries": [
+    {
+      "url": "/api/admin/keys",
+      "kind": "api",
+      "summary": "Admin: mint, list, and revoke API keys (admin token required)",
+      "agent_alternate": "/skills/admin.md",
+      "human_alternate": "/dashboard/keys"
+    },
+    {
+      "url": "/api/admin/observability",
+      "kind": "api",
+      "summary": "Admin: aggregate per-key request volume, latency, and error stats",
+      "agent_alternate": "/skills/admin.md",
+      "human_alternate": "/dashboard/agents"
+    },
+    {
+      "url": "/api/webhooks/hsp",
+      "kind": "api",
+      "summary": "Inbound HSP settlement callback (signed by HashKey, verified server-side)",
+      "agent_alternate": null,
+      "human_alternate": null
+    },
+    {
+      "url": "/mcp",
+      "kind": "api",
+      "summary": "MCP SSE endpoint exposing FlowLink skills as remote tools (bearer auth)",
+      "agent_alternate": "/.well-known/mcp.json",
+      "human_alternate": null
+    },
+    {
+      "url": "/v1/auth/siwe/nonce",
+      "kind": "api",
+      "summary": "Mint a single-use EIP-4361 nonce for Sign-In-With-Ethereum",
+      "agent_alternate": null,
+      "human_alternate": null
+    },
+    {
+      "url": "/v1/auth/siwe/verify",
+      "kind": "api",
+      "summary": "Verify a signed SIWE message and exchange it for a session bearer token",
+      "agent_alternate": null,
+      "human_alternate": null
+    },
+    {
+      "url": "/v1/auth/whoami",
+      "kind": "api",
+      "summary": "Return the caller identity (address or key fingerprint) and active scopes",
+      "agent_alternate": null,
+      "human_alternate": null
+    },
+    {
+      "url": "/v1/compliance/check",
+      "kind": "api",
+      "summary": "Pre-flight OFAC + velocity screening for a counterparty (fail-closed)",
+      "agent_alternate": "/skills/compliance.md",
+      "human_alternate": null
+    },
+    {
+      "url": "/v1/invoices",
+      "kind": "api",
+      "summary": "Create a new invoice or list invoices for the authenticated principal",
+      "agent_alternate": "/skills/invoice.md",
+      "human_alternate": null
+    },
+    {
+      "url": "/v1/invoices/[id]",
+      "kind": "api",
+      "summary": "Read or cancel a specific invoice by id",
+      "agent_alternate": "/skills/invoice.md",
+      "human_alternate": null
+    },
+    {
+      "url": "/v1/pay",
+      "kind": "api",
+      "summary": "Settle an invoice via HSP Single-Pay mandate on HashKey Chain (id 133)",
+      "agent_alternate": "/skills/pay.md",
+      "human_alternate": null
+    },
+    {
+      "url": "/v1/receipts",
+      "kind": "api",
+      "summary": "List ed25519-signed settlement receipts for the authenticated principal",
+      "agent_alternate": "/skills/receipt.md",
+      "human_alternate": null
+    },
+    {
+      "url": "/v1/receipts/[id]",
+      "kind": "api",
+      "summary": "Fetch a single ed25519-signed settlement receipt by id",
+      "agent_alternate": "/skills/receipt.md",
+      "human_alternate": null
+    },
+    {
+      "url": "/v1/reputation/[address]",
+      "kind": "api",
+      "summary": "Counterparty trust score and on-chain history for an address",
+      "agent_alternate": "/skills/reputation.md",
+      "human_alternate": null
+    },
+    {
+      "url": "/v1/transactions/[id]",
+      "kind": "api",
+      "summary": "Read a settlement transaction lifecycle record by id",
+      "agent_alternate": null,
+      "human_alternate": null
+    },
+    {
+      "url": "/v1/transactions/[id]/events",
+      "kind": "api",
+      "summary": "Stream lifecycle events for a settlement transaction (compliance, broadcast, receipt)",
+      "agent_alternate": null,
+      "human_alternate": null
+    },
+    {
+      "url": "/",
+      "kind": "human-page",
+      "summary": "Marketing landing page describing FlowLink and the agent-payments thesis",
+      "agent_alternate": "/llms.txt",
+      "human_alternate": null
+    },
+    {
+      "url": "/dashboard",
+      "kind": "human-page",
+      "summary": "Human dashboard root (overview + nav into keys, agents, settings)",
+      "agent_alternate": "/skills/dashboard.md",
+      "human_alternate": null
+    },
+    {
+      "url": "/dashboard/agents",
+      "kind": "human-page",
+      "summary": "Human UI for live observability of agent traffic per key fingerprint",
+      "agent_alternate": "/skills/dashboard.md",
+      "human_alternate": null
+    },
+    {
+      "url": "/dashboard/keys",
+      "kind": "human-page",
+      "summary": "Human UI for minting and revoking API keys",
+      "agent_alternate": "/skills/dashboard.md",
+      "human_alternate": null
+    },
+    {
+      "url": "/.well-known/flowlink.md",
+      "kind": "manifest",
+      "summary": "Agent quickstart: pay an invoice on HashKey testnet in under 60 seconds",
+      "agent_alternate": null,
+      "human_alternate": null
+    },
+    {
+      "url": "/.well-known/mcp.json",
+      "kind": "manifest",
+      "summary": "MCP server manifest advertising FlowLink skills as remote tools",
+      "agent_alternate": null,
+      "human_alternate": null
+    },
+    {
+      "url": "/.well-known/openapi.yaml",
+      "kind": "manifest",
+      "summary": "OpenAPI 3.1 specification for all /v1/* endpoints",
+      "agent_alternate": null,
+      "human_alternate": null
+    },
+    {
+      "url": "/llms.txt",
+      "kind": "manifest",
+      "summary": "Top-level agent discovery index (llms.txt convention)",
+      "agent_alternate": null,
+      "human_alternate": null
+    },
+    {
+      "url": "/sitemap-agent.json",
+      "kind": "manifest",
+      "summary": "Canonical machine-readable sitemap of every agent-relevant URL on FlowLink",
+      "agent_alternate": null,
+      "human_alternate": "/.well-known/agent-sitemap.md"
+    },
+    {
+      "url": "/dashboard/agents",
+      "kind": "page-spec",
+      "summary": "Page-spec sibling: structured description of /dashboard/agents for agents",
+      "agent_alternate": "/skills/dashboard.md",
+      "human_alternate": "/dashboard/agents"
+    },
+    {
+      "url": "/dashboard/keys",
+      "kind": "page-spec",
+      "summary": "Page-spec sibling: structured description of /dashboard/keys for agents",
+      "agent_alternate": "/skills/dashboard.md",
+      "human_alternate": "/dashboard/keys"
+    },
+    {
+      "url": "/.well-known/agent-sitemap.md",
+      "kind": "signal",
+      "summary": "Human-readable companion to sitemap-agent.json (markdown table grouped by kind)",
+      "agent_alternate": "/sitemap-agent.json",
+      "human_alternate": null
+    },
+    {
+      "url": "/.well-known/flowlink-receipt-pubkey.pem",
+      "kind": "signal",
+      "summary": "ed25519 public key used to verify FlowLink settlement receipts",
+      "agent_alternate": null,
+      "human_alternate": null
+    },
+    {
+      "url": "/.well-known/jwks.json",
+      "kind": "signal",
+      "summary": "JWKS for verifying SIWE-derived session bearer tokens",
+      "agent_alternate": null,
+      "human_alternate": null
+    },
+    {
+      "url": "/robots.txt",
+      "kind": "signal",
+      "summary": "Crawler policy: explicitly allows GPTBot, ClaudeBot, Claude-Web, anthropic-ai, Google-Extended, PerplexityBot",
+      "agent_alternate": null,
+      "human_alternate": null
+    },
+    {
+      "url": "/skills/admin.md",
+      "kind": "skill",
+      "summary": "Admin operations: API key lifecycle and observability aggregates",
+      "agent_alternate": null,
+      "human_alternate": "/dashboard/keys"
+    },
+    {
+      "url": "/skills/compliance.md",
+      "kind": "skill",
+      "summary": "Pre-flight OFAC + velocity screening (fail-closed) before settlement",
+      "agent_alternate": null,
+      "human_alternate": null
+    },
+    {
+      "url": "/skills/dashboard.md",
+      "kind": "skill",
+      "summary": "Programmatic equivalents of the human dashboard surfaces",
+      "agent_alternate": null,
+      "human_alternate": "/dashboard"
+    },
+    {
+      "url": "/skills/errors.md",
+      "kind": "skill",
+      "summary": "RFC 9457 Problem+JSON error catalogue with codes and agent_action hints",
+      "agent_alternate": null,
+      "human_alternate": null
+    },
+    {
+      "url": "/skills/invoice.md",
+      "kind": "skill",
+      "summary": "Create, read, and cancel invoices",
+      "agent_alternate": null,
+      "human_alternate": null
+    },
+    {
+      "url": "/skills/pay.md",
+      "kind": "skill",
+      "summary": "Settle invoices via HSP Single-Pay mandate on HashKey Chain (id 133)",
+      "agent_alternate": null,
+      "human_alternate": null
+    },
+    {
+      "url": "/skills/receipt.md",
+      "kind": "skill",
+      "summary": "Fetch ed25519-signed cryptographic proof of settlement",
+      "agent_alternate": null,
+      "human_alternate": null
+    },
+    {
+      "url": "/skills/reputation.md",
+      "kind": "skill",
+      "summary": "Read counterparty trust score derived from on-chain history",
+      "agent_alternate": null,
+      "human_alternate": null
+    }
+  ]
+}

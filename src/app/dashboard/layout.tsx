@@ -1,8 +1,19 @@
 // Minimal dashboard shell. Sidebar nav matches the v0.2 preview slide:
 //   Overview · API keys · Activity · Receipts · Settings
 // Only "API keys" is wired in v0.2 — the rest go to placeholder pages.
+//
+// Agent-discoverability: every dashboard page advertises its agent-readable
+// counterpart `/skills/dashboard.md` plus the agent sitemap. The Next 14
+// `metadata.alternates.types` API emits `<link rel="alternate" type="…" …>`
+// hoisted into the document `<head>`. The matching `Link:` HTTP header is set
+// by `src/middleware.ts` so non-HTML clients (curl, fetch w/o DOM) discover
+// alternates without parsing markup. The literal `<link rel="describedby">`
+// below is rendered into the layout because the Next metadata API has no
+// first-class `describedby` field — Next 14 hoists raw `<link>` tags from
+// layouts into `<head>` automatically.
 
 import Link from "next/link";
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 type NavItem = { href: string; label: string; live: boolean };
@@ -16,9 +27,34 @@ const NAV: readonly NavItem[] = [
   { href: "/dashboard/settings", label: "Settings", live: false },
 ];
 
+// Override the root layout's `alternates.types` so any page nested under
+// `/dashboard/*` points agents at the dashboard skill instead of the
+// landing-page agent guide. Nested layouts in Next 14 replace the parent's
+// `alternates` shallowly, which is exactly the behavior we want here.
+export const metadata: Metadata = {
+  alternates: {
+    types: {
+      "text/markdown": "/skills/dashboard.md",
+      "application/json": "/sitemap-agent.json",
+    },
+  },
+};
+
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-mint-50 text-ink-700">
+      {/*
+        Agent-readable counterpart and machine-readable sitemap. The two
+        `<link rel="alternate">` tags duplicate what the `metadata.alternates`
+        export above already emits; we keep them here as a visible, in-source
+        contract for the dashboard skill. Next 14 deduplicates identical
+        `<link>` tags it hoists into `<head>`. The `describedby` link has no
+        equivalent in the Next metadata API, so it lives only here.
+      */}
+      <link rel="alternate" type="text/markdown" href="/skills/dashboard.md" title="Agent-callable equivalent" />
+      <link rel="alternate" type="application/json" href="/sitemap-agent.json" title="Agent sitemap" />
+      <link rel="describedby" href="/skills/dashboard.md" />
+
       <header className="border-b border-mint-200 bg-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-3">

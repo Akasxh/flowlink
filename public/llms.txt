@@ -6,12 +6,14 @@
 ## Start here
 
 - Agent quickstart: https://flowlink.ink/.well-known/flowlink.md
+- Agent sitemap:    https://flowlink.ink/sitemap-agent.json
 - MCP manifest:     https://flowlink.ink/.well-known/mcp.json
 - OpenAPI 3.1:      (ships in v0.2 — for now use the skill files below)
 
 ## Skills
 
 - [invoice](https://flowlink.ink/skills/invoice.md) — create, read, cancel invoices
+- [invoice-link](https://flowlink.ink/skills/invoice-link.md) — public per-invoice URL agents read from QR / NFC / paste
 - [pay](https://flowlink.ink/skills/pay.md) — settle an invoice via HSP Single-Pay mandate
 - [compliance](https://flowlink.ink/skills/compliance.md) — OFAC + velocity screening
 - [receipt](https://flowlink.ink/skills/receipt.md) — cryptographic proof of settlement

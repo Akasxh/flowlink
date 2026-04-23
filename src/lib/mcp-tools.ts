@@ -13,6 +13,12 @@ import { check as complianceCheck } from "./compliance";
 import { prisma } from "./prisma";
 import { ulid } from "./ulid";
 import { createSinglePayMandate, isConfigured as hspConfigured } from "./hsp";
+import {
+  generateApiKey,
+  revokeApiKey,
+  type ApiKeyScope,
+} from "./auth/apikey";
+import { summary as accessLogSummary } from "./access-log";
 
 export type ToolName =
   | "create_invoice"
@@ -20,7 +26,11 @@ export type ToolName =
   | "pay_invoice"
   | "check_sanctions"
   | "get_receipt"
-  | "get_reputation";
+  | "get_reputation"
+  | "list_api_keys"
+  | "mint_api_key"
+  | "revoke_api_key"
+  | "query_observability";
 
 export type ToolContext = { principalSubject: string };
 
@@ -378,6 +388,139 @@ const getReputation: ToolHandler = async (args) => {
   });
 };
 
+// ── admin tools ────────────────────────────────────────────────────────
+//
+// These mirror /api/admin/* HTTP routes but call directly into
+// `lib/auth/apikey.ts` and `lib/access-log.ts`. Same admin-user pinning
+// pattern as the HTTP route (lazy upsert keyed on a deterministic email).
+// The MCP transport already authenticates via SIWE bearer; the admin tools
+// are flagged `admin: true` in the catalogue so clients (e.g. Claude) can
+// surface the dev-only nature in their UI.
+
+const ADMIN_USER_EMAIL = "admin@flowlink.local";
+const ALL_API_KEY_SCOPES: readonly ApiKeyScope[] = [
+  "invoice:read",
+  "invoice:write",
+  "pay:execute",
+  "receipt:read",
+  "compliance:check",
+  "reputation:read",
+] as const;
+
+async function ensureAdminUserId(): Promise<string> {
+  const user = await prisma.user.upsert({
+    where: { email: ADMIN_USER_EMAIL },
+    update: {},
+    create: { email: ADMIN_USER_EMAIL, displayName: "Local Admin" },
+  });
+  return user.id;
+}
+
+// ── list_api_keys ──────────────────────────────────────────────────────
+
+const listApiKeysSchema = z.object({}).strict();
+
+const listApiKeys: ToolHandler = async (args) => {
+  const parsed = parseArgs(listApiKeysSchema, args);
+  if (!parsed.ok) return fail("validation_error", parsed.detail);
+
+  const userId = await ensureAdminUserId();
+  const rows = await prisma.apiKey.findMany({
+    where: { userId },
+    orderBy: { createdAt: "desc" },
+    take: 100,
+  });
+
+  // Sanitised projection — never expose `keyHash`. Prefix is safe (already
+  // returned by the public mint flow). Caller never recovers the raw key.
+  const data = rows.map((r) => ({
+    id: r.id,
+    name: r.name,
+    prefix: r.prefix,
+    scopes: r.scopes.split(",").filter(Boolean) as ApiKeyScope[],
+    env: r.prefix.startsWith("flk_live_") ? "live" : "test",
+    created_at: r.createdAt.toISOString(),
+    last_used_at: r.lastUsedAt ? r.lastUsedAt.toISOString() : null,
+    revoked_at: r.revokedAt ? r.revokedAt.toISOString() : null,
+    expires_at: r.expiresAt ? r.expiresAt.toISOString() : null,
+  }));
+
+  return ok({ data, count: data.length });
+};
+
+// ── mint_api_key ───────────────────────────────────────────────────────
+
+const mintApiKeySchema = z.object({
+  name: z.string().trim().min(1).max(80),
+  scopes: z
+    .array(z.enum(ALL_API_KEY_SCOPES as unknown as [ApiKeyScope, ...ApiKeyScope[]]))
+    .min(1),
+  env: z.enum(["live", "test"]).optional(),
+});
+
+const mintApiKey: ToolHandler = async (args) => {
+  const parsed = parseArgs(mintApiKeySchema, args);
+  if (!parsed.ok) return fail("validation_error", parsed.detail);
+
+  const userId = await ensureAdminUserId();
+  const minted = await generateApiKey({
+    userId,
+    name: parsed.data.name,
+    scopes: parsed.data.scopes,
+    env: parsed.data.env ?? "test",
+  });
+
+  // `rawKey` is shown ONCE — caller (agent) MUST persist it. Server keeps
+  // only the sha256 hash, so a lost rawKey forces a fresh mint.
+  return ok({
+    id: minted.id,
+    rawKey: minted.rawKey,
+    prefix: minted.prefix,
+    scopes: minted.scopes,
+    env: parsed.data.env ?? "test",
+  });
+};
+
+// ── revoke_api_key ─────────────────────────────────────────────────────
+
+const revokeApiKeySchema = z.object({ id: z.string().min(1) });
+
+const revokeApiKeyTool: ToolHandler = async (args) => {
+  const parsed = parseArgs(revokeApiKeySchema, args);
+  if (!parsed.ok) return fail("validation_error", parsed.detail);
+
+  const userId = await ensureAdminUserId();
+
+  // Defence-in-depth — the admin-user pinning matches the HTTP route, so a
+  // misrouted id (e.g. a key owned by a SIWE wallet user) returns 404
+  // rather than getting silently revoked.
+  const existing = await prisma.apiKey.findUnique({ where: { id: parsed.data.id } });
+  if (!existing || existing.userId !== userId) {
+    return fail("not_found", "key not found for this admin user");
+  }
+
+  await revokeApiKey(parsed.data.id);
+  return ok({ id: parsed.data.id, revoked: true });
+};
+
+// ── query_observability ────────────────────────────────────────────────
+
+const DEFAULT_OBS_WINDOW_SEC = 300;
+const MAX_OBS_WINDOW_SEC = 86_400;
+
+const queryObservabilitySchema = z.object({
+  windowSec: z.number().int().positive().max(MAX_OBS_WINDOW_SEC).optional(),
+});
+
+const queryObservability: ToolHandler = async (args) => {
+  const parsed = parseArgs(queryObservabilitySchema, args);
+  if (!parsed.ok) return fail("validation_error", parsed.detail);
+
+  const windowSec = parsed.data.windowSec ?? DEFAULT_OBS_WINDOW_SEC;
+  const data = await accessLogSummary(windowSec);
+  return ok(data);
+};
+
 // ── dispatch table ─────────────────────────────────────────────────────
 
 export const TOOL_HANDLERS: Record<ToolName, ToolHandler> = {
@@ -387,4 +530,8 @@ export const TOOL_HANDLERS: Record<ToolName, ToolHandler> = {
   check_sanctions: checkSanctions,
   get_receipt: getReceipt,
   get_reputation: getReputation,
+  list_api_keys: listApiKeys,
+  mint_api_key: mintApiKey,
+  revoke_api_key: revokeApiKeyTool,
+  query_observability: queryObservability,
 };
